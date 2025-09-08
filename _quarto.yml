@@ -1,0 +1,39 @@
+project:
+  type: website
+
+website:
+  navbar:
+    background: success   # Vert forêt
+    foreground: white
+    left:
+      - text: "<i class='bi bi-hospital'></i> RAPPOR PTME"
+        href: tracking-ptme.qmd
+      - text: "<i class='bi bi-flower3'></i> RAPPORT JARDINAGE"
+        href: tracking-gardening.qmd
+      - text: "<i class='bi bi-people'></i> RAPPORT OEV"
+        href: tracking-oev.qmd
+      - text: "<i class='bi bi-bar-chart-line'></i> RAPPORT MUSO"
+        href: tracking-muso.qmd
+      - text: "<i class='bi bi-egg-fried'></i> RAPPORT NUTRITION"
+        href: tracking-nutrition.qmd
+
+  page-footer:
+    center: "© 2025 CFI – Tous droits réservés"
+format:
+  html:
+    theme: flatly               # thème bootswatch
+    css:
+      - styles.css
+    fig-align: center
+    toc: true
+    toc-location: left
+    toc-title: "Table des matières"  # 👈 Titre personnalisé# Pour bien positionner la TOC à gauche
+    toc-depth: 2                 # Ajuste la profondeur de la TOC selon tes titres
+    number-sections: true
+    self-contained: true
+
+output-dir: _site               # (optionnel) dossier de sortie à personnaliser
+
+execute:
+  echo: true                    # (optionnel) affiche le code exécuté dans les .qmd
+
