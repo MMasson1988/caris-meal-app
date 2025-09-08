@@ -1,0 +1,693 @@
+---
+title: "PROGRAMME JARDINAGE"
+subtitle: "Caris Foundation | Tracking des bénéficiaires"
+author: "M&E Department"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+format:
+  html:
+    theme: flatly
+    css:
+      - styles.css
+    fig-align: center
+    page-layout: article
+    toc: true
+    toc-location: left           # Pour bien positionner la TOC à gauche
+    toc-depth: 2                 # Ajuste la profondeur de la TOC selon tes titres
+    number-sections: true
+    self-contained: true
+---
+<style>
+
+  /* Applique au titre de niveau 1 à 3 */
+  h2, h3 {
+    color: #003366;                             /* Bleu foncé pour les titres */
+    border-bottom: 2px solid #0055a5;           /* Ligne décorative sous les titres */
+    padding-bottom: 0.3em;                      /* Espace entre le titre et la ligne */
+  }
+
+  /* Applique aux en-têtes de colonne */
+  th {
+    background-color: #003366;                  /* Fond bleu foncé */
+    color: #fff;                                /* Texte blanc */
+    text-align: left;                           /* Alignement à gauche */
+    padding: 12px;                              /* Espace interne */
+  }
+
+  /* Applique aux cellules du tableau */
+  td {
+    padding: 10px;                              /* Espace interne */
+    border-top: 1px solid #ddd;                 /* Ligne de séparation entre lignes */
+  }
+
+  /* Applique une couleur de fond alternée à une ligne sur deux */
+  tr:nth-child(even) {
+    background-color: #f9f9f9;                  /* Fond gris très clair */
+  }
+
+  /* Style pour les cartes ("cards") visuelles */
+  .card {
+    background: white;                          /* Fond blanc */
+    border: 1px solid #ddd;                     /* Bordure grise claire */
+    border-radius: 10px;                        /* Coins arrondis */
+    padding: 1.5rem;                            /* Espace interne généreux */
+    margin-bottom: 2rem;                        /* Espace entre les cartes */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);       /* Ombre portée discrète */
+  }
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
+```{r libraries, echo=FALSE,warning = FALSE, message = FALSE}
+Sys.setenv(TZ='GMT')
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(RMySQL))
+suppressPackageStartupMessages(library(odbc))
+suppressPackageStartupMessages(library(DBI))
+suppressPackageStartupMessages(library(viridis))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(ggiraphExtra))
+suppressPackageStartupMessages(library(hrbrthemes))
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(RColorBrewer))
+suppressPackageStartupMessages(library(tidytext))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(purrr))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(extrafont))
+suppressPackageStartupMessages(library(forcats))
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(readxl))
+suppressPackageStartupMessages(library(writexl))
+suppressPackageStartupMessages(library(reticulate))
+```
+
+```{r, echo=FALSE}
+reticulate::use_python("C:/Users/moise/AppData/Local/Programs/Python/Python313/python.exe")
+
+#use_virtualenv("./../../python_env", required = TRUE)
+```
+
+```{python, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+#Import relevant libraries
+import os
+import re
+import time
+import warnings
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
+
+# Third-party imports
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+from itables import show, init_notebook_mode, options
+from IPython.display import display, HTML
+import openpyxl
+import xlsxwriter
+import pymysql
+from sqlalchemy import create_engine
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
+from IPython.core.interactiveshell import InteractiveShell
+from IPython.display import display
+# Load environment variables from .env file
+load_dotenv('dot.env')
+pd.set_option('display.float_format', '{:.2f}'.format)  # Set float format
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+
+# Enable interactive shell for Jupyter Notebook
+_ = InteractiveShell.ast_node_interactivity = "all"
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+import pandas as pd
+
+def plot_monthly_data(df, date_column, plot_title):
+    df[date_column] = pd.to_datetime(df[date_column])
+    df['Month'] = df[date_column].dt.strftime('%B %Y')
+    monthly_counts = df.groupby('Month')['caseid'].count().reset_index()
+
+    months_order = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December']
+    
+    ordered_months = [f'{month} {year}' for year in sorted(monthly_counts['Month'].str.split(' ').str[1].unique()) 
+                      for month in months_order if f'{month} {year}' in monthly_counts['Month'].unique()]
+    
+    monthly_counts['Month'] = pd.Categorical(monthly_counts['Month'], categories=ordered_months, ordered=True)
+    monthly_counts = monthly_counts.sort_values(by='Month')
+
+    plt.figure(figsize=(12, 10))
+    
+    viridis = cm.get_cmap('viridis', len(monthly_counts))
+    colors = viridis(np.arange(len(monthly_counts)))
+    
+    bars = plt.barh(monthly_counts['Month'], monthly_counts['caseid'], color=colors)
+
+    for bar in bars:
+        width = bar.get_width()
+        label_x_pos = width + 0.5
+        label_y_pos = bar.get_y() + bar.get_height() / 2
+        plt.text(label_x_pos, label_y_pos, f'{int(width)}', 
+                 va='center', ha='left', fontsize=12, fontweight='bold', color='black')
+
+    plt.title(plot_title, fontsize=14, fontweight='bold')
+    plt.xlabel('Number of Cases', fontsize=14, fontweight='bold')
+    plt.ylabel('Month', fontsize=14, fontweight='bold')
+
+    # Mettre les labels des ticks en gras
+    plt.xticks(fontsize=12, fontweight='bold')
+    plt.yticks(fontsize=12, fontweight='bold')
+
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_beneficiaries_by_categorie(df, lo_department, set_title, set_xlabel, set_ylabel):
+    # Configuration générale adaptée pour Quarto
+    sns.set(rc={'figure.figsize': (15, 10)})
+    sns.set_style("whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    # Agréger et trier les données
+    sorted_data = df.groupby(lo_department).size().sort_values(ascending=False)
+    sorted_df = sorted_data.reset_index(name='count')
+
+    #Total des patients actifs
+    total_active_patients = sorted_df['count'].sum()
+
+    # Palette viridis adaptée pour web
+    n_colors = len(sorted_df)
+    palette = sns.color_palette("viridis", n_colors=n_colors)
+
+    # Tracé du graphique
+    ax = sns.barplot(
+        y=lo_department,
+        x='count',
+        data=sorted_df,
+        palette=palette
+    )
+
+    # Titre et labels
+    ax.set_title(f"{set_title}\nTotal bénéficiaires : {total_active_patients}", fontsize=24, weight='bold')
+    ax.set_xlabel(set_xlabel, fontsize=22)
+    ax.set_ylabel(set_ylabel, fontsize=22)
+    #Retrait de la grille
+    ax.grid(False)
+
+    # Ajout des valeurs sur les barres
+    for container in ax.containers:
+        ax.bar_label(container, padding=5, fontsize=26, weight="bold", color='black')
+
+    # Nettoyage des bordures
+    sns.despine()
+
+    # Ajustement
+    plt.tight_layout()
+    plt.show()
+```
+
+
+```{python, echo=FALSE}
+def extraire_data(df, start_date, end_date, date_col):
+    # Conversion des dates d'entrée
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    # Conversion de la colonne de date dans le DataFrame
+    if date_col in df.columns:
+        df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+    else:
+        raise ValueError(f"Colonne '{date_col}' absente du DataFrame.")
+
+    # Filtrage
+    df = df[df[date_col].between(start_date, end_date)]
+
+    return df
+```
+
+
+```{python, echo=FALSE}
+# Étape 11 : Bornes de date
+start_date = pd.Timestamp("2024-10-01")
+end_date = pd.Timestamp(datetime.today().date())
+```
+
+```{python, echo=FALSE}
+# Bornes de date dynamiques : 1er jour du mois courant jusqu'à aujourd'hui
+start_month = pd.Timestamp(datetime.today().replace(day=1))
+end_month = pd.Timestamp(datetime.today().date())
+```
+
+```{python, echo=FALSE}
+today = datetime.today()
+
+# Lundi de la semaine dernière
+start_week = pd.Timestamp(today - timedelta(days=today.weekday() + 7))
+
+# Dimanche de la semaine dernière
+end_week = pd.Timestamp(today - timedelta(days=today.weekday() + 1))
+```
+ 
+# NOMBRE DE BENEFICIAIRES EN JARDINAGE PAR OFFICE
+```{r, echo=FALSE}
+all_gardens <- read_excel("df_filtered.xlsx", sheet = 1)
+```
+
+
+```{python, echo=FALSE}
+all_gardens = pd.read_excel("all_gardens.xlsx",sheet_name=0)
+all_gardens['site'] = all_gardens['site'].fillna("").astype(str).str.strip()
+
+all_gardens['office'] = all_gardens['office'].fillna("")  # pour éviter les erreurs si la colonne existe déjà
+
+all_gardens.loc[(all_gardens['site'] == "ART/CSAR") | (all_gardens['site'] == ""), 'office'] = "CAP"
+all_gardens['office'] = all_gardens['office'].str.replace(r'^jeremie$', 'PDP', case=False, regex=True)
+
+# Assurez-vous que les dates sont bien en format datetime
+date_cols = ['cycle_1_start_date', 'cycle_2_start_date', 'cycle_3_start_date']
+for col in date_cols:
+    if col in all_gardens.columns:
+        all_gardens[col] = pd.to_datetime(all_gardens[col], errors='coerce')
+
+# Filtrage : au moins une des colonnes est dans l'intervalle
+jardin_mask = all_gardens[date_cols].apply(
+    lambda row: any((row >= start_date) & (row <= end_date)), axis=1
+)
+
+# Extraction des cas correspondants
+jardin_cases = all_gardens[jardin_mask]
+#jardin_cases
+
+```
+
+```{r, echo = FALSE}
+# plot
+rall_gardens <- read_excel("all_gardens.xlsx", sheet = 1)
+```
+
+
+::: card
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+  df = all_gardens,
+  lo_department = "office",
+  set_title = "Nombre de bénéficiaires par office",
+  set_xlabel = "Nombre de cas",
+  set_ylabel = "office"
+)
+```
+:::
+
+
+## LISTE DES BENEFICIAIRES DU PROGRAMME JARDINAGE
+```{r, echo= FALSE}
+all_gardens_r <- py$all_gardens
+
+DT::datatable(all_gardens_r, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```
+
+::: card
+# NOMBRE DE BENEFICIAIRES AVEC JARDIN PAR OFFICE
+
+```{python, echo= FALSE}
+# Plot
+plot_beneficiaries_by_categorie(
+  df = jardin_cases,
+  lo_department = "office",
+  set_title = "Nombre de bénéficiaires par office",
+  set_xlabel = "Nombre de cas",
+  set_ylabel = "techniciens"
+)
+```
+:::
+
+::: card
+# NOMBRE DE GRADUÉS EN JARDINAGE PAR TECHNICIENS
+```{python, echo= FALSE}
+# Extraire les bénéficiaires gradués dans la période
+all_graduated = extraire_data(all_gardens, start_date, end_date, 'dat_gradyasyon')
+
+if all_graduated.empty:
+    print("❌ Aucun bénéficiaire gradué n'a été trouvé dans le fichier.")
+else:
+    print("✅ Sélection des nouveaux bénéficiaires...")
+
+    # Export en Excel
+    all_graduated.to_excel("all_graduated.xlsx", index=False)
+
+    # Affichage du graphique
+    plot_beneficiaries_by_categorie(
+        df=all_graduated,
+        lo_department='office',
+        set_title='Bénéficiaires total par office pour la période',
+        set_xlabel='Bénéficiaires',
+        set_ylabel='Office'
+    )
+```
+:::
+
+::: card
+# NOMBRE DE GRADUÉS EN JARDINAGE PAR MOIS
+```{python, echo=FALSE}
+# Vérifier s'il y a des données
+if all_graduated.empty:
+    print("❌ Aucun bénéficiaire gradué n'a été trouvé dans le fichier.")
+else:
+    total = all_graduated.value_counts("dat_gradyasyon").sum()
+    plot_monthly_data(
+        all_graduated,
+        'dat_gradyasyon',
+        f'Nombre de bénéficiaires gradués par mois\nTotal: {total}'
+    )
+```
+:::
+
+::: card
+# NÉOPHYTES OU NOUVEAUX BENEFICIAIRES DU PROGRAMME
+```{python, echo=FALSE}
+# Sélection des nouveaux bénéficiaires
+new_beneficiaires = extraire_data(all_gardens, start_date, end_date, 'start_date')
+
+if new_beneficiaires.empty:
+    print("❌ Il n'y a pas de nouveaux bénéficiaires pour cette période.")
+else:
+    # Export en Excel
+    new_beneficiaires.to_excel("new_beneficiaires.xlsx", index=False)
+
+    # Visualisation par office
+    plot_beneficiaries_by_categorie(
+        df=new_beneficiaires,
+        lo_department='office',
+        set_title='Nouveaux bénéficiaires par office pour la période',
+        set_xlabel='Bénéficiaires',
+        set_ylabel='Office'
+    )
+```
+:::
+
+::: card
+# PVVIH PAR OFFICE
+```{python, echo=FALSE}
+garden_positif = all_gardens[all_gardens['beneficiary_type'] == 'Caris']
+#garden_positif.shape[0]
+plot_beneficiaries_by_categorie(
+    df=garden_positif,
+    lo_department='office',
+    set_title='Bénéficiaires positifs par office',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office')
+```
+:::
+
+
+::: card
+# FUTURES GRADUÉS EN CYLE 3 PAR OFFICE
+```{python, echo=FALSE}
+# select garden_cycle where cycle_3 = yes
+beneficiaires_cycle_3 = extraire_data(all_gardens, start_date, end_date, 'cycle_3_end_date')
+
+if beneficiaires_cycle_3.empty:
+    print("❌ Il n'y a pas de bénéficiaires pen cyclee 3 pour cette période.")
+else:
+    # Export en Excel
+    beneficiaires_cycle_3.to_excel("beneficiaires_cycle_3.xlsx", index=False)
+
+    # Visualisation par office
+    plot_beneficiaries_by_categorie(
+        df=beneficiaires_cycle_3,
+        lo_department='office',
+        set_title='Nombre de futures gradués en cyle 3',
+        set_xlabel='Bénéficiaires',
+        set_ylabel='Office'
+    )
+```
+:::
+
+
+::: card
+# REPARTITION DES BENEFICIAIRES PAR TYPE ET STATUT
+```{python, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+# Visualisation par office
+plot_beneficiaries_by_categorie(
+    df=all_gardens,
+    lo_department='beneficiary_type',
+    set_title='Nombre de bénéficiaires par office pour la période',
+    set_xlabel='Bénéficiaires',
+    set_ylabel='Office'
+)
+# import numpy as np
+# import pandas as pd
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+# from matplotlib.cm import viridis
+# from matplotlib.colors import to_hex
+# # Grouper les données
+# df_plot = all_gardens.groupby(['beneficiary_type', 'statut']).size().reset_index(name='count')
+# 
+# # Générer une palette Viridis
+# n_colors = df_plot['statut'].nunique()
+# viridis_palette = [to_hex(viridis(i / n_colors)) for i in range(n_colors)]
+# 
+# # Créer le graphique
+# sns.set(style="white")  # Supprime les gridlines
+# plt.figure(figsize=(12, 7))
+# 
+# ax = sns.barplot(
+#     data=df_plot,
+#     x='beneficiary_type',
+#     y='count',
+#     hue='statut',
+#     palette=viridis_palette
+# )
+# 
+# # Ajouter les étiquettes sur les barres
+# for container in ax.containers:
+#     ax.bar_label(container, label_type='edge', fontsize=11)
+# 
+# # Titres et axes
+# ax.set_title("Répartition des bénéficiaires par type et statut", fontsize=16, weight='bold')
+# ax.set_xlabel("Type de bénéficiaire")
+# ax.set_ylabel("Nombre de bénéficiaires")
+# 
+# # Légende sous le graphique
+# ax.legend(
+#     title="Statut", 
+#     loc='upper center', 
+#     bbox_to_anchor=(0.5, -0.15), 
+#     ncol=2, 
+#     frameon=False
+# )
+# 
+# # Mise en page finale
+# sns.despine()
+# plt.tight_layout()
+# plt.show()
+```
+:::
+
+
+
+
+## Nombre de bénéficiaires indirects
+:::card
+```{r, echo = FALSE}
+library(dplyr)
+library(stringr)   # str_trim, str_replace_all
+library(ggplot2)
+
+# 1) Nettoyage + conversion numérique (avec as.numeric)
+all_gardens_clean <- rall_gardens %>%
+  mutate(household_number = as.numeric(household_number))    # 
+
+# 2) Agrégation
+household_garden <- all_gardens_clean %>%
+  group_by(username) %>%
+  summarise(`Nombre de ménage compté` = sum(household_number, na.rm = TRUE), .groups = "drop") %>%
+  rename(agent_code = username) %>%
+  arrange(desc(`Nombre de ménage compté`))
+
+# 3) Total
+total_beneficiaires <- sum(household_garden$`Nombre de ménage compté`, na.rm = TRUE)
+
+# 4) Graphique
+ggplot(household_garden,
+       aes(x = reorder(agent_code, `Nombre de ménage compté`),
+           y = `Nombre de ménage compté`,
+           fill = `Nombre de ménage compté`)) +
+  geom_col(color = "black", show.legend = FALSE) +
+  geom_label(aes(label = `Nombre de ménage compté`),
+             size = 3.5, color = "black", show.legend = FALSE) +
+  coord_flip() +
+  theme_bw() +
+  labs(
+    title   = paste("Total des bénéficiaires indirects :", total_beneficiaires),
+    caption = paste("Data source: CommCare", Sys.Date()),
+    x = "Techniciens",
+    y = "Bénéficiaires indirects"
+  ) +
+  theme(plot.caption = element_text(face = "italic", size = 14)) +
+  scale_fill_gradientn(colors = c("red", "yellow", "green"))
+
+```
+:::
+
+
+# COMPTAGE DE MENAGE
+
+```{python, echo= FALSE}
+## Comptage actualisé des jardins
+import pandas as pd
+from pandas.tseries.offsets import DateOffset
+
+# Simuler ou charger `all_gardens`
+# all_gardens = pd.read_csv("fichier.csv") ou déjà défini
+
+all_gardens['household_collection_date'] = pd.to_datetime(
+    all_gardens['household_collection_date'], errors='coerce'
+)
+
+garden_avec_comptage = all_gardens[
+    all_gardens['household_collection_date'].notna() &
+    (all_gardens['household_collection_date'] != '---')
+]
+
+garden_sans_comptage = all_gardens[
+    all_gardens['household_collection_date'].isna() |
+    (all_gardens['household_collection_date'] == '---')
+]
+
+one_year_ago = pd.Timestamp.today() - DateOffset(years=1)
+
+garden_last_year = all_gardens[
+    all_gardens['household_collection_date'] >= one_year_ago
+]
+
+garden_last_more_year = all_gardens[
+    all_gardens['household_collection_date'] < one_year_ago
+]
+# Affichage pour debug
+#print("Nombre de lignes récentes :", garden_last_more_year.shape[0])
+#garden_avec_comptage.head()
+
+```
+
+::: card
+## BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=garden_avec_comptage,
+    lo_department='office',
+    set_title='Nombre de bénéficiaires avec comptage de ménage',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+:::
+
+
+
+::: card
+## BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=garden_sans_comptage,
+    lo_department='office',
+    set_title='Nombre de bénéficiaires sans comptage de ménage',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+:::
+
+
+## LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE
+```{r, echo= FALSE}
+rgarden_sans_comptage <- py$garden_sans_comptage
+
+DT::datatable(rgarden_sans_comptage, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 6))
+```
+
+
+::: card
+## BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=garden_last_year,
+    lo_department='office',
+    set_title='Nombre bénéficiaires avec comptage actualisé',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+:::
+
+::: card
+## BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=garden_last_more_year,
+    lo_department='office',
+    set_title='Nombre bénéficiaires avec comptage non actualisé',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+:::
+
+## LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ
+```{r, echo= FALSE}
+rgarden_last_more_year <- py$garden_last_more_year
+
+DT::datatable(rgarden_last_more_year, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```

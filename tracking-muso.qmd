@@ -1,0 +1,586 @@
+---
+title: "PROGRAMME MUSO"
+subtitle: "Caris Foundation | Tracking des bénéficiaires"
+author: "M&E Department"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+format:
+  html:
+    theme: flatly
+    css:
+      - styles.css
+    fig-align: center
+    page-layout: article
+    toc: true
+    toc-location: left           # Pour bien positionner la TOC à gauche
+    toc-depth: 2                 # Ajuste la profondeur de la TOC selon tes titres
+    number-sections: true
+    self-contained: true
+---
+
+```{=html}
+<style>
+
+  /* Applique au titre de niveau 1 à 3 */
+  h2, h3 {
+    color: #003366;                             /* Bleu foncé pour les titres */
+    border-bottom: 2px solid #0055a5;           /* Ligne décorative sous les titres */
+    padding-bottom: 0.3em;                      /* Espace entre le titre et la ligne */
+  }
+
+  /* Applique aux en-têtes de colonne */
+  th {
+    background-color: #003366;                  /* Fond bleu foncé */
+    color: #fff;                                /* Texte blanc */
+    text-align: left;                           /* Alignement à gauche */
+    padding: 12px;                              /* Espace interne */
+  }
+
+  /* Applique aux cellules du tableau */
+  td {
+    padding: 10px;                              /* Espace interne */
+    border-top: 1px solid #ddd;                 /* Ligne de séparation entre lignes */
+  }
+
+  /* Applique une couleur de fond alternée à une ligne sur deux */
+  tr:nth-child(even) {
+    background-color: #f9f9f9;                  /* Fond gris très clair */
+  }
+
+  /* Style pour les cartes ("cards") visuelles */
+  .card {
+    background: white;                          /* Fond blanc */
+    border: 1px solid #ddd;                     /* Bordure grise claire */
+    border-radius: 10px;                        /* Coins arrondis */
+    padding: 1.5rem;                            /* Espace interne généreux */
+    margin-bottom: 2rem;                        /* Espace entre les cartes */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);       /* Ombre portée discrète */
+  }
+</style>
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+```{r libraries, echo=FALSE,warning = FALSE, message = FALSE}
+Sys.setenv(TZ='GMT')
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(RMySQL))
+suppressPackageStartupMessages(library(odbc))
+suppressPackageStartupMessages(library(DBI))
+suppressPackageStartupMessages(library(viridis))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(ggiraphExtra))
+suppressPackageStartupMessages(library(hrbrthemes))
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(RColorBrewer))
+suppressPackageStartupMessages(library(tidytext))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(purrr))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(extrafont))
+suppressPackageStartupMessages(library(forcats))
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(readxl))
+suppressPackageStartupMessages(library(writexl))
+suppressPackageStartupMessages(library(reticulate))
+```
+
+```{r, echo=FALSE}
+reticulate::use_python("C:/Users/moise/AppData/Local/Programs/Python/Python313/python.exe")
+
+#use_virtualenv("./../../python_env", required = TRUE)
+```
+
+```{python, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+#Import relevant libraries
+import os
+import re
+import time
+import warnings
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
+
+# Third-party imports
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+from itables import show, init_notebook_mode, options
+from IPython.display import display, HTML
+import openpyxl
+import xlsxwriter
+import pymysql
+from sqlalchemy import create_engine
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
+from IPython.core.interactiveshell import InteractiveShell
+from IPython.display import display
+# Load environment variables from .env file
+load_dotenv('dot.env')
+pd.set_option('display.float_format', '{:.2f}'.format)  # Set float format
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+
+# Enable interactive shell for Jupyter Notebook
+_ = InteractiveShell.ast_node_interactivity = "all"
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+import pandas as pd
+
+def plot_monthly_data(df, date_column, use_col, plot_title):
+    df[date_column] = pd.to_datetime(df[date_column])
+    df['Month'] = df[date_column].dt.strftime('%B %Y')
+    monthly_counts = df.groupby('Month')[use_col].count().reset_index()
+
+    months_order = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December']
+    
+    ordered_months = [f'{month} {year}' for year in sorted(monthly_counts['Month'].str.split(' ').str[1].unique()) 
+                      for month in months_order if f'{month} {year}' in monthly_counts['Month'].unique()]
+    
+    monthly_counts['Month'] = pd.Categorical(monthly_counts['Month'], categories=ordered_months, ordered=True)
+    monthly_counts = monthly_counts.sort_values(by='Month')
+
+    plt.figure(figsize=(12, 10))
+    
+    viridis = cm.get_cmap('viridis', len(monthly_counts))
+    colors = viridis(np.arange(len(monthly_counts)))
+    
+    bars = plt.barh(monthly_counts['Month'], monthly_counts[use_col], color=colors)
+
+    for bar in bars:
+        width = bar.get_width()
+        label_x_pos = width + 0.5
+        label_y_pos = bar.get_y() + bar.get_height() / 2
+        plt.text(label_x_pos, label_y_pos, f'{int(width)}', 
+                 va='center', ha='left', fontsize=22, fontweight='bold', color='black')
+
+    plt.title(plot_title, fontsize=26, fontweight='bold')
+    plt.xlabel('Number of Cases', fontsize=20, fontweight='bold')
+    plt.ylabel('Month', fontsize=20, fontweight='bold')
+
+    # Mettre les labels des ticks en gras
+    plt.xticks(fontsize=20, fontweight='bold')
+    plt.yticks(fontsize=20, fontweight='bold')
+
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+```
+
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_beneficiaries_by_categorie(df, lo_department, set_title, set_xlabel, set_ylabel):
+    # Configuration générale adaptée pour Quarto
+    sns.set(rc={'figure.figsize': (15, 10)})
+    sns.set_style("whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    # Agréger et trier les données
+    sorted_data = df.groupby(lo_department).size().sort_values(ascending=False)
+    sorted_df = sorted_data.reset_index(name='count')
+
+    #Total des patients actifs
+    total_active_patients = sorted_df['count'].sum()
+
+    # Palette viridis adaptée pour web
+    n_colors = len(sorted_df)
+    palette = sns.color_palette("viridis", n_colors=n_colors)
+
+    # Tracé du graphique
+    ax = sns.barplot(
+        y=lo_department,
+        x='count',
+        data=sorted_df,
+        palette=palette
+    )
+
+    # Titre et labels
+    ax.set_title(f"{set_title}\nTotal : {total_active_patients}", fontsize=24, weight='bold')
+    ax.set_xlabel(set_xlabel, fontsize=22)
+    ax.set_ylabel(set_ylabel, fontsize=22)
+    #Retrait de la grille
+    ax.grid(False)
+
+    # Ajout des valeurs sur les barres
+    for container in ax.containers:
+        ax.bar_label(container, padding=5, fontsize=26, weight="bold", color='black')
+
+    # Nettoyage des bordures
+    sns.despine()
+
+    # Ajustement
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+import pandas as pd
+
+def plot_monthly_data(df, date_column, use_col, plot_title):
+    df[date_column] = pd.to_datetime(df[date_column])
+    df['Month'] = df[date_column].dt.strftime('%B %Y')
+    monthly_counts = df.groupby('Month')[use_col].count().reset_index()
+
+    months_order = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December']
+    
+    ordered_months = [f'{month} {year}' for year in sorted(monthly_counts['Month'].str.split(' ').str[1].unique()) 
+                      for month in months_order if f'{month} {year}' in monthly_counts['Month'].unique()]
+    
+    monthly_counts['Month'] = pd.Categorical(monthly_counts['Month'], categories=ordered_months, ordered=True)
+    monthly_counts = monthly_counts.sort_values(by='Month')
+
+    plt.figure(figsize=(12, 10))
+    
+    viridis = cm.get_cmap('viridis', len(monthly_counts))
+    colors = viridis(np.arange(len(monthly_counts)))
+    
+    bars = plt.barh(monthly_counts['Month'], monthly_counts[use_col], color=colors)
+
+    for bar in bars:
+        width = bar.get_width()
+        label_x_pos = width + 0.5
+        label_y_pos = bar.get_y() + bar.get_height() / 2
+        plt.text(label_x_pos, label_y_pos, f'{int(width)}', 
+                 va='center', ha='left', fontsize=22, fontweight='bold', color='black')
+
+    plt.title(plot_title, fontsize=26, fontweight='bold')
+    plt.xlabel('Number of Cases', fontsize=20, fontweight='bold')
+    plt.ylabel('Month', fontsize=20, fontweight='bold')
+
+    # Mettre les labels des ticks en gras
+    plt.xticks(fontsize=20, fontweight='bold')
+    plt.yticks(fontsize=20, fontweight='bold')
+
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+```
+
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_sum_beneficiaries_by_categorie(df, lo_department, value_col, set_title, set_xlabel, set_ylabel):
+    # Configuration générale adaptée pour Quarto
+    sns.set(rc={'figure.figsize': (15, 10)})
+    sns.set_style("whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    # Agréger et trier les données (somme des éléments)
+    sorted_data = df.groupby(lo_department)[value_col].sum().sort_values(ascending=False)
+    sorted_df = sorted_data.reset_index(name='count')
+    sorted_df['count'] = sorted_df['count'].astype(np.int64)
+
+    # Total des patients actifs
+    total_active_patients = sorted_df['count'].sum()
+
+    # Palette viridis adaptée pour web
+    n_colors = len(sorted_df)
+    palette = sns.color_palette("viridis", n_colors=n_colors)
+
+    # Tracé du graphique
+    ax = sns.barplot(
+        y=lo_department,
+        x='count',
+        data=sorted_df,
+        palette=palette
+    )
+
+    # Titre et labels
+    ax.set_title(f"{set_title}\nTotal : {total_active_patients}", fontsize=24, weight='bold')
+    ax.set_xlabel(set_xlabel, fontsize=22)
+    ax.set_ylabel(set_ylabel, fontsize=22)
+    # Retrait de la grille
+    ax.grid(False)
+
+    # Ajout des valeurs sur les barres
+    for container in ax.containers:
+        ax.bar_label(container, padding=5, fontsize=26, weight="bold", color='black')
+
+    # Nettoyage des bordures
+    sns.despine()
+
+    # Ajustement
+    plt.tight_layout()
+    plt.show()
+
+```
+
+
+
+
+```{python, echo=FALSE}
+# Bornes de date dynamiques : 1er jour du mois courant jusqu'à aujourd'hui
+start_month = pd.Timestamp(datetime.today().replace(day=1))
+end_month = pd.Timestamp(datetime.today().date())
+```
+
+```{python, echo=FALSE}
+today = datetime.today()
+
+# Lundi de la semaine dernière
+start_week = pd.Timestamp(today - timedelta(days=today.weekday() + 7))
+
+# Dimanche de la semaine dernière
+end_week = pd.Timestamp(today - timedelta(days=today.weekday() + 1))
+```
+
+# STATISTIQUES DES GROUPES
+
+```{python, echo=FALSE}
+muso_group = pd.read_excel("muso_group_final.xlsx",sheet_name=0)
+```
+
+
+## Nombre de groupes par commmune
+::: card
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+  df = muso_group,
+  lo_department = "commune_name",
+  set_title = "Nombre de groupes par commune",
+  set_xlabel = "Nombre de groupes",
+  set_ylabel = "commune"
+)
+```
+:::
+
+## Liste des groupes MUSO actifs
+```{r, echo= FALSE}
+muso_group_r <- py$muso_group
+
+DT::datatable(muso_group_r, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```
+
+
+## Nombre de groupes par agent
+::: card
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+  df = muso_group,
+  lo_department = "officer_name_y",
+  set_title = "Nombre de groupes par agent",
+  set_xlabel = "Nombre de groupes",
+  set_ylabel = "agent"
+)
+```
+:::
+
+## Nombre de groupes créés par mois
+::: card
+```{python, echo=FALSE}
+plot_monthly_data(
+  df = muso_group,
+  use_col = "caseid_group",
+  date_column = "creation_date",
+  plot_title = "Nombre de groupes créés par mois"
+)
+```
+:::
+
+
+## Nombre de groupes créés pour cette semaine
+```{python, echo=FALSE}
+# Date d'aujourd'hui et il y a 7 jours
+today = datetime.now()
+seven_days_ago = today - timedelta(days=7)
+
+# Filtrer les groupes créés cette semaine
+groupes_cette_semaine = muso_group[
+    (muso_group["creation_date"] >= seven_days_ago) & 
+    (muso_group["creation_date"] <= today)]
+```
+
+```{r, echo=FALSE}
+groupes_cette_semaine_r <- py$groupes_cette_semaine
+cette_semaine = nrow(groupes_cette_semaine_r)
+```
+
+:::card
+***Note***: Durant cette semaine, un total de `r nrow(groupes_cette_semaine_r)` groupe(s) a/ont créé(s)
+:::
+
+# STATISTIQUES DES BÉNÉFICIAIRES
+```{python, echo=FALSE}
+muso_ben = pd.read_excel("muso_ben_actif.xlsx",sheet_name=0)
+```
+
+## Nombre de bénéficiaires par agent
+::: card
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+  df = muso_ben,
+  lo_department = "officer_name",
+  set_title = "Nombre de bénéficiaires par agent",
+  set_xlabel = "Nombre de bénéficiaires",
+  set_ylabel = "agent"
+)
+```
+:::
+
+
+## Liste des bénéficiaires MUSO actifs
+```{r, echo= FALSE}
+muso_ben_r <- py$muso_ben
+
+DT::datatable(muso_ben_r, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```
+
+
+## Nombre de PVVIH par agent
+::: card
+```{python, echo=FALSE}
+muso_pvvih = muso_ben[muso_ben["is_pvvih"]=="1"]
+plot_beneficiaries_by_categorie(
+  df = muso_pvvih,
+  lo_department = "officer_name",
+  set_title = "Nombre de bénéficiaires par agent",
+  set_xlabel = "Nombre de bénéficiaires",
+  set_ylabel = "agents"
+)
+```
+:::
+
+## Nombre de bénéficiaires avec comptage de ménage par agent
+::: card
+```{python, echo=FALSE}
+household_number = muso_ben[muso_ben["household_number_2022"]!="---"]
+household_sans_comptage = muso_ben[muso_ben["household_number_2022"]=="---"]
+plot_beneficiaries_by_categorie(
+  df = household_number,
+  lo_department = "officer_name",
+  set_title = "Nombre de bénéficiaires par agent",
+  set_xlabel = "Nombre de bénéficiaires",
+  set_ylabel = "agents"
+)
+```
+:::
+
+## Liste des bénéficiaires sans comptage
+```{r, echo= FALSE}
+household_sans_comptage_r <- py$household_sans_comptage
+
+DT::datatable(household_sans_comptage_r, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```
+
+## Nombre de bénéficiaires indirects par agent
+::: card
+```{r, echo=FALSE}
+# 1. Conversion en numérique
+household_number_r <- py$household_number
+household_number_r <- household_number_r %>%
+  mutate(household_number_2022 = as.numeric(household_number_2022))
+
+# 2. Calcul de la somme par agent
+df_sum <- household_number_r %>%
+  group_by(officer_name) %>%
+  summarise(total_households = sum(household_number_2022, na.rm = TRUE))
+
+# 3. Calcul du total global
+total_all <- sum(df_sum$total_households, na.rm = TRUE)
+
+# 4. Graphe avec couleurs distinctes par agent
+ggplot(df_sum, aes(x = reorder(officer_name, total_households), 
+                   y = total_households, 
+                   fill = officer_name)) +
+  geom_col() +
+  geom_text(aes(label = format(total_households, big.mark = " ")), 
+            hjust = -0.1, size = 4) +
+  coord_flip() +
+  scale_fill_viridis_d(option = "plasma", direction = 1, guide = "none") +
+  labs(
+    title = paste0("Bénéficiaires indirects (Total : ", format(total_all, big.mark = " "), ")"),
+    x = "Agents",
+    y = "Total des ménages"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(face = "bold")) +
+  expand_limits(y = max(df_sum$total_households) * 1.1)
+
+
+```
+:::
+
+
+## Nombre de bénéficiaires avec ppi par agent
+::: card
+```{python, echo=FALSE}
+ben_avec_ppi = pd.read_excel("muso_ben_with_ppi.xlsx",sheet_name=0)
+#ben_sans_ppi = muso_ben[muso_ben["date_enquete_ppi"]=="---"]
+ben_sans_ppi = muso_ben[~muso_ben["caseid"].isin(ben_avec_ppi["caseid"])]
+plot_beneficiaries_by_categorie(
+  df = ben_avec_ppi,
+  lo_department = "officer_name",
+  set_title = "Nombre de ppi par agent",
+  set_xlabel = "Nombre de ppi",
+  set_ylabel = "agents"
+)
+```
+:::
+
+## Liste des bénéficiaires sans ppi
+```{r, echo= FALSE}
+ben_sans_ppi_r <- py$ben_sans_ppi
+
+DT::datatable(ben_sans_ppi_r, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```

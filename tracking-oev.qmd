@@ -1,0 +1,1058 @@
+---
+title: "PROGRAMME OEV"
+subtitle: "Caris Foundation | Tracking des patients OEV"
+author: "M&E Department"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+format:
+  html:
+    theme: flatly
+    css:
+      - styles.css
+    fig-align: center
+    toc: true
+    toc-location: left           # Pour bien positionner la TOC à gauche
+    toc-depth: 2                 # Ajuste la profondeur de la TOC selon tes titres
+    number-sections: true
+    self-contained: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
+```{r libraries, echo=FALSE,warning = FALSE, message = FALSE}
+Sys.setenv(TZ='GMT')
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(RMySQL))
+suppressPackageStartupMessages(library(odbc))
+suppressPackageStartupMessages(library(DBI))
+suppressPackageStartupMessages(library(viridis))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(ggiraphExtra))
+suppressPackageStartupMessages(library(hrbrthemes))
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(RColorBrewer))
+suppressPackageStartupMessages(library(tidytext))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(purrr))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(extrafont))
+suppressPackageStartupMessages(library(forcats))
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(readxl))
+suppressPackageStartupMessages(library(writexl))
+suppressPackageStartupMessages(library(reticulate))
+```
+
+```{r, echo=FALSE}
+reticulate::use_python("C:/Users/moise/AppData/Local/Programs/Python/Python313/python.exe")
+
+#use_virtualenv("./../../python_env", required = TRUE)
+```
+
+```{python, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+#Import relevant libraries
+import os
+import re
+import time
+import warnings
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
+
+# Third-party imports
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+from itables import show, init_notebook_mode, options
+from IPython.display import display, HTML
+import openpyxl
+import xlsxwriter
+import pymysql
+from sqlalchemy import create_engine
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv('dot.env')
+pd.set_option('display.float_format', '{:.2f}'.format)  # Set float format
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+```
+
+```{python, echo= FALSE}
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def plot_viral_load_summary2_sns(df, age_min=0, age_max=19, start_date=None, end_date=None, title=None, output='plot', palette='viridis'):
+    df = df.copy()
+
+    # Nettoyage
+    df['age'] = pd.to_numeric(df['age'], errors='coerce')
+    df['last_viral_load_collection_date'] = pd.to_datetime(df['last_viral_load_collection_date'], errors='coerce')
+    df['arv_start_date'] = pd.to_datetime(df['arv_start_date'], errors='coerce')
+
+    # Filtrage âge
+    df = df[(df['age'] >= age_min) & (df['age'] <= age_max)]
+    if df.empty:
+        print(f"Aucune donnée pour les patients âgés de {age_min} à {age_max} ans.")
+        return None
+
+    end_date = pd.to_datetime('today')
+
+    # Étapes cascade
+    on_arv = df[df['arv_start_date'] <= end_date - pd.DateOffset(months=2)]
+    not_on_arv = df[~df.index.isin(on_arv.index)]
+
+    # Date du jour
+    today = datetime.today()
+
+    # Référence : 1er jour du mois précédent mais un an avant
+    if today.month == 1:
+        reference_date = datetime(today.year - 2, 12, 1)
+    else:
+        reference_date = datetime(today.year - 1, today.month - 1, 1)
+
+    # Exemple d’utilisation
+    vl_coverage = on_arv[
+        on_arv['last_viral_load_collection_date'] >= reference_date
+    ]
+    not_covered = on_arv[~on_arv.index.isin(vl_coverage.index)]
+
+    suppression_col = 'indetectable_ou_inf_1000'
+    df[suppression_col] = df[suppression_col].astype(str)
+    vl_suppression = vl_coverage[vl_coverage[suppression_col].str.upper() == "OUI"]
+    not_suppressed = vl_coverage[~vl_coverage.index.isin(vl_suppression.index)]
+
+    # Output dataframe
+    if output == 'on_arv': return on_arv
+    elif output == 'not_on_arv': return not_on_arv
+    elif output == 'vl_coverage': return vl_coverage
+    elif output == 'not_covered': return not_covered
+    elif output == 'vl_suppression': return vl_suppression
+    elif output == 'not_suppressed': return not_suppressed
+    elif output == 'TX_CURR': return df
+
+    # Données pour graphique
+    Indicators = ['TX_CURR', 'On ARV ≥3mois', 'Viral Load Coverage', 'Viral Load Suppression']
+    n_1 = [df.shape[0], on_arv.shape[0], vl_coverage.shape[0], vl_suppression.shape[0]]
+    prop_impact1 = [
+        1.0,
+        on_arv.shape[0] / df.shape[0] if df.shape[0] > 0 else 0,
+        vl_coverage.shape[0] / on_arv.shape[0] if on_arv.shape[0] > 0 else 0,
+        vl_suppression.shape[0] / vl_coverage.shape[0] if vl_coverage.shape[0] > 0 else 0
+    ]
+
+    med = pd.DataFrame({
+        'Indicators': Indicators,
+        'n_1': n_1,
+        'prop_impact1': [round(p * 100, 1) for p in prop_impact1]
+    })
+
+    # Palette dynamique
+    if isinstance(palette, str):
+        colors = sns.color_palette(palette, len(med))
+    else:
+        colors = palette  # palette personnalisée passée en liste
+    color_map = dict(zip(med['Indicators'], colors))
+    med['Color'] = med['Indicators'].map(color_map)
+    med['Label'] = med.apply(lambda row: f"{row['n_1']:,} ({row['prop_impact1']}%)", axis=1)
+
+    # Titre
+    if title is None:
+        title = f"Cascade des OEV âgés de {age_min}-{age_max} ans"
+
+    # Création du graphique
+    sns.set(style="whitegrid")
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    bars = sns.barplot(
+        x='Indicators',
+        y='n_1',
+        data=med,
+        palette=color_map,
+        ax=ax
+    )
+
+    # Ajouter les annotations
+    for i, row in med.iterrows():
+        ax.text(
+            i,
+            row['n_1'] + max(med['n_1']) * 0.02,
+            row['Label'],
+            ha='center',
+            va='bottom',
+            fontsize=11,
+            fontweight='bold'
+        )
+
+    # Mise en forme
+    ax.set_title(title, fontsize=18, weight='bold')
+    ax.set_xlabel('')
+    ax.set_ylabel('Fréquence')
+    sns.despine(left=True, bottom=True)
+    ax.grid(False)
+    ax.set_facecolor('white')
+    fig.patch.set_facecolor('white')
+
+    # Annotation source
+    ax.annotate(
+        f"Source: hivhaiti / {end_date.date()}",
+        xy=(0.5, -0.15),
+        xycoords='axes fraction',
+        ha='center',
+        fontsize=10,
+        color='gray'
+    )
+
+    plt.tight_layout()
+    plt.show()
+#palette='Set2'  # ou 'Paired', 'Pastel1', etc.
+#palette=["#77198C", "#EF553B", "#00C2CC", "#F7FA63"]
+
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+import pandas as pd
+
+def plot_monthly_data_oev(df, date_column, plot_title):
+    df[date_column] = pd.to_datetime(df[date_column])
+    df['Month'] = df[date_column].dt.strftime('%B %Y')
+    monthly_counts = df.groupby('Month')['patient_code'].count().reset_index()
+
+    months_order = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December']
+    
+    ordered_months = [f'{month} {year}' for year in sorted(monthly_counts['Month'].str.split(' ').str[1].unique()) 
+                      for month in months_order if f'{month} {year}' in monthly_counts['Month'].unique()]
+    
+    monthly_counts['Month'] = pd.Categorical(monthly_counts['Month'], categories=ordered_months, ordered=True)
+    monthly_counts = monthly_counts.sort_values(by='Month')
+
+    plt.figure(figsize=(12, 10))
+    
+    viridis = cm.get_cmap('viridis', len(monthly_counts))
+    colors = viridis(np.arange(len(monthly_counts)))
+    
+    bars = plt.barh(monthly_counts['Month'], monthly_counts['patient_code'], color=colors)
+
+    for bar in bars:
+        width = bar.get_width()
+        label_x_pos = width + 0.5
+        label_y_pos = bar.get_y() + bar.get_height() / 2
+        plt.text(label_x_pos, label_y_pos, f'{int(width)}', 
+                 va='center', ha='left', fontsize=12, fontweight='bold', color='black')
+
+    plt.title(plot_title, fontsize=14, fontweight='bold')
+    plt.xlabel('Number of Cases', fontsize=14, fontweight='bold')
+    plt.ylabel('Month', fontsize=14, fontweight='bold')
+
+    # Mettre les labels des ticks en gras
+    plt.xticks(fontsize=12, fontweight='bold')
+    plt.yticks(fontsize=12, fontweight='bold')
+
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_beneficiaries_by_categorie(df, lo_department, set_title, set_xlabel, set_ylabel):
+    # Configuration générale adaptée pour Quarto
+    sns.set(rc={'figure.figsize': (15, 10)})
+    sns.set_style("whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    # Agréger et trier les données
+    sorted_data = df.groupby(lo_department).size().sort_values(ascending=False)
+    sorted_df = sorted_data.reset_index(name='count')
+
+    #Total des patients actifs
+    total_active_patients = sorted_df['count'].sum()
+
+    # Palette viridis adaptée pour web
+    n_colors = len(sorted_df)
+    palette = sns.color_palette("viridis", n_colors=n_colors)
+
+    # Tracé du graphique
+    ax = sns.barplot(
+        y=lo_department,
+        x='count',
+        data=sorted_df,
+        palette=palette
+    )
+
+    # Titre et labels
+    ax.set_title(f"{set_title}\nTotal bénéficiaires : {total_active_patients}", fontsize=24, weight='bold')
+    ax.set_xlabel(set_xlabel, fontsize=22)
+    ax.set_ylabel(set_ylabel, fontsize=22)
+    #Retrait de la grille
+    ax.grid(False)
+
+    # Ajout des valeurs sur les barres
+    for container in ax.containers:
+        ax.bar_label(container, padding=5, fontsize=26, weight="bold", color='black')
+
+    # Nettoyage des bordures
+    sns.despine()
+
+    # Ajustement
+    plt.tight_layout()
+    plt.show()
+```
+
+
+# GENÉRALITÉS
+## Nombre d'OEV par office
+```{r, echo=FALSE}
+tx_curr <- read_excel("TX_CURR.xlsx", sheet = 1)
+```
+
+
+```{python, echo=FALSE}
+tx_curr = pd.read_excel("TX_CURR.xlsx",sheet_name=0)
+tx_curr = tx_curr[tx_curr['LTFU 30days']=="No"]
+```
+
+
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+  df = tx_curr,
+  lo_department = "office",
+  set_title = "Nombre de bénéficiaires par bureau",
+  set_xlabel = "Nombre de cas",
+  set_ylabel = "Bureau"
+)
+```
+
+## Répartition des OEV selon leur appartenance en club ou pas (contexte actuel)
+```{python, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+import pandas as pd
+
+age_club = range(9, 18)  # 9 to 17 inclusive
+def filter_by_age_club(df, age_column, age_club):
+    df[age_column] = pd.to_numeric(df[age_column], errors='coerce')
+    df = df[df[age_column].isin(age_club)]
+    df = df[(df['club_type'] == 'club_9_12') | (df['club_type'] == 'club_13_17')][['site','office','patient_code','age', 'sex','club_type', 'took_viral_load_test', 'indetectable_ou_inf_1000', 'last_viral_load_collection_date','arv_start_date', 'viral_load_date']]
+    return df
+
+age_in_club_now = tx_curr[tx_curr['age'].isin(age_club)]
+#age_in_club_now.shape[0]
+oev_in_club = filter_by_age_club(age_in_club_now, 'age', age_club)
+#oev_in_club.shape[0]
+not_in_club = age_in_club_now[~age_in_club_now['patient_code'].isin(oev_in_club['patient_code'])]
+#not_in_club.shape[0]
+not_in_club_anymore = tx_curr[~tx_curr['age'].isin(age_club)]
+#not_in_club_anymore.shape[0]
+
+
+total = tx_curr.shape[0]
+age_club_num = age_in_club_now.shape[0]
+in_club_num = oev_in_club.shape[0]
+not_in_club_num = not_in_club.shape[0]
+not_in_club_anymore_num = not_in_club_anymore.shape[0]
+
+# Préparer les données
+data = pd.DataFrame({
+    "Catégorie": [
+        "Total OEV",
+        "En age d'etre en club",
+        "Actuellement en club",
+        "Hors catégorie",
+        "En age mais pas en club"
+    ],
+    "Effectif": [total, age_club_num, in_club_num, not_in_club_anymore_num, not_in_club_num]
+})
+
+# Palette viridis
+colors = cm.viridis(np.linspace(0, 1, len(data)))
+
+# Création du graphique
+fig, ax = plt.subplots(figsize=(10, 6))  # équivalent à hauteur 600px
+
+bars = ax.bar(data["Catégorie"], data["Effectif"], color=colors)
+
+# Ajouter les valeurs au-dessus des barres
+for bar in bars:
+    height = bar.get_height()
+    ax.annotate(
+        f'{int(height):,}',
+        xy=(bar.get_x() + bar.get_width() / 2, height),
+        xytext=(0, 5),  # décalage vertical
+        textcoords="offset points",
+        ha='center',
+        va='bottom',
+        fontsize=10
+    )
+
+# Titre et axes
+ax.set_title("Répartition des oev selon leur appartenance ou non à un club (9-17 ans)", fontsize=14)
+ax.set_ylabel("Nombre d'enfants")
+
+# Nettoyage visuel
+ax.set_facecolor("white")          # fond du plot
+fig.patch.set_facecolor("white")   # fond extérieur
+ax.grid(False)                     # désactiver les gridlines
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+plt.xticks(rotation=15)
+plt.tight_layout()
+plt.show()
+```
+
+
+## Cascade de Suppression de Charge virale chez les enfants de moins de 18 ans
+```{python, echo= FALSE}
+plot_viral_load_summary2_sns(tx_curr, age_min=0, age_max=17)
+```
+
+<!-- # VIRAL DATAFRAME -->
+```{python, echo=FALSE}
+not_covered = plot_viral_load_summary2_sns(tx_curr, age_min=0, age_max=17, output='not_covered')
+TX_CURR = plot_viral_load_summary2_sns(tx_curr, age_min=0, age_max=17, output='TX_CURR')
+vl_coverage = plot_viral_load_summary2_sns(tx_curr, age_min=0, age_max=17, output='vl_coverage')
+on_arv = plot_viral_load_summary2_sns(tx_curr, age_min=0, age_max=17, output='on_arv')
+vl_suppression = plot_viral_load_summary2_sns(tx_curr, age_min=0, age_max=17, output='vl_suppression')
+not_on_arv = plot_viral_load_summary2_sns(tx_curr, age_min=0, age_max=17, output='not_on_arv')
+```
+
+## Enfants sans charges virales actualisées
+```{r, echo=FALSE}
+rnot_covered<-py$not_covered
+DT::datatable(rnot_covered, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```
+
+## Liste des enfants de moins de 18 ans avec prélèvement dans les 12 derniers mois sans résultat
+```{python, echo=FALSE}
+no_result = tx_curr[
+    (tx_curr['last_viral_load_collection_date'].isna()) &
+    (tx_curr['indetectable_ou_inf_1000'].isna())]
+```
+
+
+
+```{r,echo=FALSE}
+rno_result<-py$no_result
+DT::datatable(rnot_covered, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 6))
+```
+
+# CLUB OEV
+## Nombre d'OEV en club par office
+```{python, echo= FALSE}
+oev_in_club = pd.read_excel("oev_in_club.xlsx",sheet_name=0)
+plot_beneficiaries_by_categorie(
+  df = oev_in_club,
+  lo_department = "office",
+  set_title = "Nombre d'oev en club",
+  set_xlabel = "Nombre d'oev",
+  set_ylabel = "office"
+)
+```
+
+## Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans en club
+```{python, echo= FALSE}
+plot_viral_load_summary2_sns(oev_in_club, age_min=0, age_max=17, title = "Cascade des OEV en club")
+```
+
+## Pyramide des ages des OEV
+<!-- # GRAPHE PLOTLY INTERACTIF -->
+```{r, echo= FALSE}
+library(dplyr)
+library(plotly)
+library(forcats)
+
+plot_age_pyramid_from_three_dfs <- function(df_club, df_non_club, df_tx_curr,
+                                           age_col = "age", sex_col = "sex", id_col = "patient_code",
+                                           title = "TX_CURR - Pyramide des âges par sexe (0-17 ans)",
+                                           palette_name = "Plotly") {
+  # Définir les groupes d'âge
+  bins <- c(0, 5, 10, 15, 18)
+  labels <- c("0-4", "5-9", "10-14", "15-17")
+  
+  prepare_pyramid <- function(df) {
+    df <- df %>%
+      select(all_of(c(age_col, sex_col, id_col))) %>%
+      filter(!is.na(.data[[age_col]]), !is.na(.data[[sex_col]]), !is.na(.data[[id_col]])) %>%
+      mutate(
+        age_num = as.numeric(.data[[age_col]]),
+        age_group = cut(age_num, breaks = bins, labels = labels, right = FALSE),
+        sex = as.character(.data[[sex_col]])
+      ) %>%
+      filter(age_num >= 0, age_num <= 17) %>%
+      group_by(age_group, sex) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      tidyr::pivot_wider(names_from = sex, values_from = count, values_fill = 0) %>%
+      arrange(age_group)
+    
+    # Assurer que colonnes M et F existent
+    if (!"M" %in% colnames(df)) df$M <- 0
+    if (!"F" %in% colnames(df)) df$F <- 0
+    
+    df
+  }
+  
+  pyramids <- list(
+    "OEV en club" = prepare_pyramid(df_club),
+    "OEV non en club" = prepare_pyramid(df_non_club),
+    "TX_CURR" = prepare_pyramid(df_tx_curr)
+  )
+  
+  # Palette qualitative Plotly R (exemple Plotly, Dark24, Set1)
+palette <- viridisLite::viridis(2 * length(pyramids))
+
+  
+  fig <- plot_ly()
+  
+  buttons <- list()
+  
+  n <- length(pyramids)
+  
+  for (i in seq_along(pyramids)) {
+    pyr <- pyramids[[i]]
+    label <- names(pyramids)[i]
+    
+    visible <- rep(FALSE, 2 * n)
+    visible[(2*i - 1):(2*i)] <- TRUE
+    
+    color_m <- palette[(2*i - 1) %% length(palette) + 1]
+    color_f <- palette[(2*i) %% length(palette) + 1]
+    
+    fig <- fig %>%
+      add_trace(
+        y = as.character(pyr$age_group),
+        x = -pyr$M,
+        type = 'bar',
+        orientation = 'h',
+        name = 'Garçons',
+        marker = list(color = color_m),
+        text = pyr$M,
+        textposition = 'inside',
+        textfont = list(color = 'white', size = 13),
+        width = 0.9,
+        hovertemplate = 'Âge: %{y}<br>Garçons: %{text}<extra></extra>',
+        visible = i == 1
+      ) %>%
+      add_trace(
+        y = as.character(pyr$age_group),
+        x = pyr$F,
+        type = 'bar',
+        orientation = 'h',
+        name = 'Filles',
+        marker = list(color = color_f),
+        text = pyr$F,
+        textposition = 'inside',
+        textfont = list(color = 'white', size = 13),
+        width = 0.9,
+        hovertemplate = 'Âge: %{y}<br>Filles: %{text}<extra></extra>',
+        visible = i == 1
+      )
+    
+    buttons[[i]] <- list(
+      method = "update",
+      args = list(
+        list(visible = visible),
+        list(title = paste0(label, " - Pyramide des âges par sexe (0-17 ans)"))
+      ),
+      label = label
+    )
+  }
+  
+  # Axe dynamique
+  x_max <- max(sapply(pyramids, function(p) max(abs(p$M), p$F)))
+  step <- ceiling(x_max / 4 / 10) * 10
+  ticks <- seq(-x_max, x_max + step, by = step)
+  ticktext <- abs(ticks)
+  
+  fig <- fig %>%
+    layout(
+      title = list(text = title, x = 0.5, font = list(size = 12)),
+      barmode = 'relative',
+      xaxis = list(
+        title = 'Nombre de patients',
+        tickvals = ticks,
+        ticktext = ticktext,
+        zeroline = TRUE,
+        showgrid = FALSE
+      ),
+      yaxis = list(
+        title = "Groupe d’âge",
+        tickfont = list(size = 13),
+        showgrid = FALSE
+      ),
+      updatemenus = list(list(
+        active = 0,
+        buttons = buttons,
+        direction = "down",
+        x = 1.02,
+        xanchor = "left",
+        y = 1.10,
+        yanchor = "top",
+        showactive = TRUE
+      )),
+      legend = list(x = 1.1, y = 1.0),
+      height = 450,
+      width = 750,
+      margin = list(l = 100, r = 40, t = 80, b = 80),
+      template = 'plotly_white'
+    )
+  
+  fig
+}
+
+# Exemple d'appel (avec tes 3 dataframes df_club, df_non_club, df_tx_curr) :
+#plot_age_pyramid_from_three_dfs(df_club, df_non_club, df_tx_curr)
+
+```
+
+```{r, echo=FALSE}
+# Conversion explicite des objets Python en data.frame R
+df_tx_curr <- py$tx_curr %>% as.data.frame()
+df_club <- py$oev_in_club %>% as.data.frame()
+df_non_club <- py$not_in_club %>% as.data.frame()
+
+# Affichage du graphique
+plot_age_pyramid_from_three_dfs(df_club, df_non_club, df_tx_curr)
+```
+
+
+```{python, echo=FALSE}
+    # Étape 6 : Analyse club
+def filter_by_age_club(df, age_column, age_club):
+    df[age_column] = pd.to_numeric(df[age_column], errors='coerce')
+    df = df[df[age_column].isin(age_club)]
+    df = df[df['club_type'].isin(['club_9_12', 'club_13_17'])]
+    return df[['site', 'office', 'patient_code', 'age', 'sex', 'club_type',
+               'took_viral_load_test', 'indetectable_ou_inf_1000',
+               'last_viral_load_collection_date', 'arv_start_date', 'viral_load_date']]
+               
+age_club = range(9, 18)
+age_in_club_now = tx_curr[tx_curr['age'].isin(age_club)]
+oev_in_club = filter_by_age_club(age_in_club_now, 'age', age_club)
+not_in_club = age_in_club_now[~age_in_club_now['patient_code'].isin(oev_in_club['patient_code'])]
+not_in_club_anymore = tx_curr[~tx_curr['age'].isin(age_club)]
+```
+
+
+## Nombre d'OEV non en club par office
+```{python, echo= FALSE}
+plot_beneficiaries_by_categorie(
+  df = not_in_club,
+  lo_department = "office",
+  set_title = "Nombre d'oev qui ne sont pas en club",
+  set_xlabel = "Nombre d'oev",
+  set_ylabel = "office"
+)
+```
+
+## Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans non en club
+```{python, echo= FALSE}
+plot_viral_load_summary2_sns(not_in_club, age_min=0, age_max=17)
+```
+
+## Liste des OEV non en club
+
+```{python, echo= FALSE}
+info = pd.read_excel(
+    "site_info.xlsx",
+    sheet_name=0,
+    usecols=["site", "coordonnatrices", "nom_complet_agent", "username_agent"]
+)
+oev_not_in_club = pd.merge(not_in_club, info, on="site", how="left")
+```
+
+```{r, echo= FALSE}
+roev_not_in_club<-py$oev_not_in_club
+
+DT::datatable(roev_not_in_club, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 4))
+```
+
+# PARTICIPATION EN CLUB
+
+## Participation en club des oev pour cette semaine
+```{python, echo=FALSE}
+user = os.getenv('MYSQL_USER')
+password_hiv = os.getenv('MYSQL_PASSWORD')
+host = os.getenv('MYSQL_HOST')
+db = os.getenv('MYSQL_DB')
+
+conn = f'mysql+pymysql://{user}:{password_hiv}@{host}/{db}'
+engine = create_engine(conn)
+```
+
+
+# COMPTAGE DE MENAGE
+## Nombre d'OEV avec un comptage de menage
+```{python, echo= FALSE}
+oev_avec_comptage = pd.read_excel("oev_avec_comptage.xlsx",sheet_name=0)
+plot_beneficiaries_by_categorie(
+  df = oev_avec_comptage,
+  lo_department = "office",
+  set_title = "Nombre d'oev avec un comptage de menage",
+  set_xlabel = "Nombre d'oev",
+  set_ylabel = "office"
+)
+```
+
+
+## Liste des enfants sans comptage de menage
+```{r, echo= FALSE}
+oev_sans_comptage <- read_excel("oev_sans_comptage.xlsx")
+
+DT::datatable(oev_sans_comptage, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 6))
+```
+
+
+
+```{python, echo= FALSE}
+# Charger et partager hmm dans l'environnement Python
+stat_index = pd.read_excel("hhm_club.xlsx", sheet_name=0)
+info_oev = pd.read_excel(
+    "site_info.xlsx",
+    sheet_name=0,
+    usecols=["site", "coordonnatrices", "nom_complet_agent", "username_agent","office"])
+```
+
+## Représentation graphique des bénéficiaires indirects par bureau
+:::card
+```{python, echo=FALSE}
+stat_index["site"] = stat_index["patient_code"].str[:8]
+stat_index = pd.merge(stat_index, info_oev, on="site", how="left")
+plot_beneficiaries_by_categorie(
+  df = stat_index,
+  lo_department = "office",
+  set_title = "Nombre de bénéficiaires indirects par bureau",
+  set_xlabel = "Nombre de bénéficiaires indirects",
+  set_ylabel = "Bureau"
+)
+```
+:::
+
+# INDEX TESTING PEDIATRIQUE
+## Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…
+```{r, echo= FALSE}
+#Effectif fratrie
+# S'assurer que reticulate est chargé
+library(reticulate)
+library(dplyr)
+
+# Récupération de l'objet Python
+rstat_index <- py$stat_index
+
+# Traitement
+eff_frat <- rstat_index %>%
+  filter(infant_relationship == "3", age_in_year %in% 0:17) %>%
+  count(caseid, name = "# Enfants") %>%
+  distinct(caseid, .keep_all = TRUE)
+#eff_frat
+```
+
+```{r, echo= FALSE}
+library(dplyr)
+
+# Fratries testées (supposons que 'patient_code' soit le bon identifiant à dédupliquer)
+frat_test <- rstat_index %>%
+  distinct(caseid, .keep_all = TRUE) %>%
+  filter(infant_relationship == "3", 
+         age_in_year %in% 0:17, 
+         hiv_test == "1") %>%
+  select(caseid) %>%
+  group_by(caseid) %>%
+  count() %>%
+  ungroup() %>%
+  rename(`# Enfants testés` = n)
+#frat_test
+```
+
+```{r, echo= FALSE}
+library(dplyr)
+
+# Fratries non testées (on utilise 'patient_code' comme identifiant unique)
+frat_non_test <- rstat_index %>%
+  distinct(caseid, .keep_all = TRUE) %>%
+  filter(
+    infant_relationship == "3",
+    age_in_year %in% 0:17,
+    hiv_test == "2",
+    is_accepted != "0"
+  ) %>%
+  select(caseid) %>%
+  group_by(caseid) %>%
+  count() %>%
+  ungroup() %>%
+  rename(`# Enfants non testés` = n)
+#frat_non_test
+```
+```{r, echo= FALSE}
+library(dplyr)
+stat_index <- rstat_index %>%
+  mutate(full_code_patient_menage = ifelse(full_code_patient_menage == "//", "0", full_code_patient_menage))
+
+fratr_vih_pos_st <- stat_index %>%
+  distinct(caseid, .keep_all = TRUE) %>%  # 🔁 Remplacement de concat
+  filter(
+    infant_relationship == "3",
+    age_in_year %in% 0:17,
+    hiv_test == "1",
+    hiv_test_result == "positif",
+    full_code_patient_menage == "0"
+  ) %>%
+  group_by(caseid) %>%
+  count() %>%
+  ungroup() %>%
+  rename(`# Fratries VIH+` = n)
+#fratr_vih_pos_st
+```
+```{r, echo= FALSE}
+library(dplyr)
+#Fratries VIH+ total
+fratr_vih_pos<-rstat_index %>%
+  distinct(caseid, .keep_all = TRUE) %>%  # 🔁 Remplacement de concat
+  filter(infant_relationship=="3" & age_in_year %in% c(0:17) & 
+           hiv_test=="1" & hiv_test_result=="positif")%>%
+  select(caseid)%>%
+  group_by(caseid)%>%
+  count()%>%
+  ungroup() %>%
+  rename(`# Enfants VIH+` = n)
+#fratr_vih_pos
+## Enfants VIH+
+```
+
+```{r, echo= FALSE}
+library(dplyr)
+#Fratries VIH-
+fratr_vih_neg<-rstat_index %>%
+  distinct(caseid, .keep_all = TRUE) %>%  # 🔁 Remplacement de concat
+  filter(infant_relationship=="3" & age_in_year %in% c(0:17) & 
+           hiv_test=="1" & hiv_test_result=="negatif")%>%
+  select(caseid)%>%
+  group_by(caseid)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# Enfants VIH-`=n)
+#fratr_vih_neg
+```
+```{r, echo= FALSE}
+#Unknown status
+fratr_vih_us<-rstat_index %>%
+  distinct(caseid, .keep_all = TRUE) %>%  # 🔁 Remplacement de concat
+  filter(infant_relationship=="3" & age_in_year %in% c(0:17) & 
+           hiv_test=="1" & !hiv_test_result %in% c("positif", "negatif"))%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# no_info_status`=n)
+#fratr_vih_us
+```
+
+```{r, echo=FALSE}
+process_and_plot_data_plotly <- function(eff_frat, frat_test, fratr_vih_neg, fratr_vih_us, fratr_vih_pos, frat_non_test, palette_option = "D") {
+  
+  df_ptme_test <- data.frame(
+    variable = c("total fratries", "fratries testées", "VIH-", "statuts inconnus", "VIH+ total", "fratries non testées"),
+    freq = c(
+      if (nrow(eff_frat) > 0) nrow(eff_frat) else 0,
+      if (nrow(frat_test) > 0) nrow(frat_test) else 0,
+      if (nrow(fratr_vih_neg) > 0) nrow(fratr_vih_neg) else 0,
+      if (nrow(fratr_vih_us) > 0) nrow(fratr_vih_us) else 0,
+      if (nrow(fratr_vih_pos) > 0) nrow(fratr_vih_pos) else 0,
+      if (nrow(frat_non_test) > 0) nrow(frat_non_test) else 0
+    ),
+    type = c("enfants", "testing", "statut", "statut", "statut", "testing"),
+    stringsAsFactors = FALSE
+  )
+  
+  if (sum(df_ptme_test$freq, na.rm = TRUE) == 0) {
+    print("Aucune donnée disponible pour le graphique.")
+    return()
+  }
+  
+  df_pivot <- df_ptme_test %>%
+    tidyr::pivot_wider(names_from = variable, values_from = freq, values_fill = 0)
+  
+  var_cols <- setdiff(colnames(df_pivot), "type")
+  
+  viridis_colors <- viridisLite::viridis(length(var_cols), option = palette_option)
+  
+  fig <- plotly::plot_ly()
+  
+  for (i in seq_along(var_cols)) {
+    col <- var_cols[i]
+    values <- df_pivot[[col]]
+    total_by_type <- rowSums(df_pivot[var_cols])
+    percent_labels <- ifelse(
+      total_by_type > 0,
+      paste0(formatC(values, format = "d", big.mark = ","), "<br>(",
+             round(values / total_by_type * 100), "%)"),
+      ""
+    )
+    
+    fig <- fig %>%
+      plotly::add_trace(
+        type = 'bar',
+        name = col,
+        x = df_pivot$type,
+        y = values,
+        text = percent_labels,
+        textposition = 'inside',
+        marker = list(color = viridis_colors[i]),
+        hovertemplate = '%{x}<br>%{text}<extra></extra>'
+      )
+  }
+  
+  fig <- fig %>%
+    plotly::layout(
+      barmode = 'stack',
+      title = "Répartition des fatries selon leur statut de dépistage",
+      xaxis = list(
+        title = "",
+        showgrid = FALSE  # Pas de grille sur x
+      ),
+      yaxis = list(
+        title = "Fréquence",
+        showgrid = FALSE  # Pas de grille sur y
+      ),
+      legend = list(title = list(text = "Catégorie"), x = 1.02, y = 1),
+      margin = list(r = 150),
+      uniformtext = list(minsize = 8, mode = 'hide'),
+      height = 600,
+      annotations = list(
+        list(
+          text = paste0("Data Source: hivhaiti / ", Sys.Date()),
+          showarrow = FALSE,
+          xref = 'paper', yref = 'paper',
+          x = 1, y = -0.2,
+          xanchor = 'right',
+          font = list(size = 10, italic = TRUE)
+        )
+      )
+    )
+  
+  fig
+}
+
+
+```
+
+
+```{r, echo= FALSE}
+process_and_plot_data_plotly(eff_frat, frat_test, fratr_vih_neg, fratr_vih_us, fratr_vih_pos, frat_non_test, palette_option = "D")
+
+```
+
+```{r, echo= FALSE}
+rinfos <- read_excel("site_info.xlsx", sheet = 1)
+
+# Ajouter colonne site dans fratr_vih_us
+fratr_vih_us <- fratr_vih_us %>%
+  mutate(site = substr(patient_code, 1, 8))
+
+# Jointure avec infos par site
+fratr_vih_us_final <- fratr_vih_us %>%
+  left_join(rinfos, by = "site")
+
+# Enrichir frat_non_test avec rstat_index (par caseid)
+df_frat_non_test <- frat_non_test %>%
+  left_join(rstat_index, by = "caseid")
+
+# Sélectionner colonnes utiles et créer site
+sub_frat_non_test <- df_frat_non_test %>%
+  select(caseid, hiv_test_result, patient_code) %>%
+  mutate(site = substr(patient_code, 1, 8))
+
+# Jointure finale avec infos
+frat_non_test_final <- sub_frat_non_test %>%
+  left_join(rinfos, by = "site")
+
+# Afficher résultat
+#print(fratr_vih_us_final)
+
+```
+
+## Liste des enfants sans code ST
+```{r, echo= FALSE}
+#fratr_vih_us_final = rstat_index[rstat_index['patient_code'].isin(fratr_vih_us_final['patient_code'])]
+DT::datatable(fratr_vih_us_final, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 6))
+```
+
+## Liste des fratries sans test de dépistage
+```{r, echo= FALSE}
+#frat_non_test_final = rstat_index[rstat_index['patient_code'].isin(frat_non_test_final['patient_code'])]
+DT::datatable(frat_non_test_final, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 6))
+```

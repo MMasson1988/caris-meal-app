@@ -58,22 +58,22 @@ def main():
         
         # Chargement des fichiers Excel
         muso_group = pd.read_excel(
-            f"~/Downloads/caris-dashboard-app/data/muso_groupes (created 2025-03-25) {today_str}.xlsx", 
+            f"~/Downloads/caris-meal-app/data/muso_groupes (created 2025-03-25) {today_str}.xlsx", 
             parse_dates=True
         )
         
         muso_ben = pd.read_excel(
-            f"~/Downloads/caris-dashboard-app/data/muso_beneficiaries (created 2025-03-25) {today_str}.xlsx", 
+            f"~/Downloads/caris-meal-app/data/muso_beneficiaries (created 2025-03-25) {today_str}.xlsx", 
             parse_dates=True
         )
         
         muso_household = pd.read_excel(
-            f"~/Downloads/caris-dashboard-app/data/muso_household_2022 (created 2025-03-25) {today_str}.xlsx", 
+            f"~/Downloads/caris-meal-app/data/muso_household_2022 (created 2025-03-25) {today_str}.xlsx", 
             parse_dates=True
         )
         
         muso_ppi = pd.read_excel(
-            f"~/Downloads/caris-dashboard-app/data/MUSO - Members - PPI Questionnaires (created 2025-04-23) {today_str}.xlsx", 
+            f"~/Downloads/caris-meal-app/data/MUSO - Members - PPI Questionnaires (created 2025-04-23) {today_str}.xlsx", 
             parse_dates=True
         )
         

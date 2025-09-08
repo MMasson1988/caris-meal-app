@@ -1,0 +1,165 @@
+/* -----------------------------------
+   NAVBAR : Couleurs & Comportement
+-------------------------------------*/
+
+/* Barre de navigation sticky + fond vert foncé */
+.navbar {
+  position: sticky !important;
+  top: 0;
+  z-index: 9999;
+  background-color: #2E8B57 !important; /* Vert foncé personnalisé */
+}
+
+/* Centrage du menu */
+.navbar-nav {
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Liens du menu : style général */
+.navbar-nav .nav-link {
+  position: relative;
+  color: #ffffff !important;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+  transition: transform 0.4s ease-in-out, color 0.3s ease-in-out;
+}
+
+/* Soulignement animé au survol */
+.navbar-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: #00ffff;
+  transition: width 0.3s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover::after {
+  width: 100%;
+}
+
+/* Hover : zoom + surbrillance + couleur */
+.navbar-nav .nav-link:hover {
+  transform: scale(1.05);
+  text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
+  color: #00ffff !important;
+  cursor: pointer;
+}
+
+/* -----------------------------------
+   TITRE DE LA PAGE (TITLE BLOCK)
+-------------------------------------*/
+
+.quarto-title-block {
+  text-align: center;
+  background-color: #2E8B57;  /* Bleu vif conservé pour le bloc titre */
+  padding: 25px 40px;
+  border-radius: 15px;
+  color: white;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.quarto-title-block h1.quarto-title {
+  font-size: 2.8em;
+  font-weight: 700;
+  margin-bottom: 0.2em;
+}
+
+.quarto-title-block h2.quarto-subtitle {
+  font-size: 1.6em;
+  font-weight: 400;
+  margin-top: 0;
+  margin-bottom: 1em;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.quarto-title-block .quarto-title-author,
+.quarto-title-block .quarto-title-date {
+  font-size: 1.1em;
+  font-weight: 300;
+  opacity: 0.75;
+  margin-bottom: 0.1em;
+}
+
+/* -----------------------------------
+   TEXTE GÉNÉRAL
+-------------------------------------*/
+
+body {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f4f4f4;
+  text-align: justify;
+}
+
+/* -----------------------------------
+   TOC
+-------------------------------------*/
+/* STYLE DE LA TABLE DES MATIÈRES À GAUCHE */
+
+/* Conteneur général de la TOC */
+#TOC, .toc {
+  padding: 20px 15px;
+  margin-right: 15px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  text-align: justify;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+
+/* Les liens de la TOC */
+.toc a {
+  display: block;
+  padding: 5px 0;
+  color: #2E8B57; /* vert harmonisé */
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Survol */
+.toc a:hover {
+  color: #007BFF;
+  font-weight: bold;
+}
+
+/* Titres TOC numérotés alignés proprement */
+.toc .toc-entry {
+  margin-bottom: 5px;
+  text-align: justify;
+  line-height: 1.4;
+}
+
+.sidebar {
+  background-color: #f8f9fa; /* léger gris clair */
+  padding: 1rem;
+  border-right: 1px solid #ddd;
+}
+
+/* -----------------------------------
+   MARGE
+-------------------------------------*/
+.main-content {
+  max-width: 960px;           /* 👈 limite la largeur */
+  margin-left: auto;          /* 👈 centre horizontalement */
+  margin-right: auto;
+  padding: 2rem 3rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.cell {
+  max-width: 960px;
+  margin: 0 auto;
+}
+

@@ -1,0 +1,488 @@
+---
+title: "PROGRAMME NUTRITION"
+subtitle: "Caris Foundation | Tracking des bénéficiaires"
+author: "M&E Department"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+format:
+  html:
+    theme: flatly
+    css:
+      - styles.css
+    fig-align: center
+    page-layout: article
+    toc: true
+    toc-location: left           # Pour bien positionner la TOC à gauche
+    toc-depth: 2                 # Ajuste la profondeur de la TOC selon tes titres
+    number-sections: true
+    self-contained: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
+```{r libraries, echo=FALSE,warning = FALSE, message = FALSE}
+Sys.setenv(TZ='GMT')
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(RMySQL))
+suppressPackageStartupMessages(library(odbc))
+suppressPackageStartupMessages(library(DBI))
+suppressPackageStartupMessages(library(viridis))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(ggiraphExtra))
+suppressPackageStartupMessages(library(hrbrthemes))
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(RColorBrewer))
+suppressPackageStartupMessages(library(tidytext))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(purrr))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(extrafont))
+suppressPackageStartupMessages(library(forcats))
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(readxl))
+suppressPackageStartupMessages(library(writexl))
+suppressPackageStartupMessages(library(reticulate))
+```
+
+```{r, echo=FALSE}
+reticulate::use_python("C:/Users/moise/AppData/Local/Programs/Python/Python313/python.exe")
+
+#use_virtualenv("./../../python_env", required = TRUE)
+```
+
+```{python, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+#Import relevant libraries
+import os
+import re
+import time
+import warnings
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
+
+# Third-party imports
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+from itables import show, init_notebook_mode, options
+from IPython.display import display, HTML
+import openpyxl
+import xlsxwriter
+import pymysql
+from sqlalchemy import create_engine
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
+from IPython.core.interactiveshell import InteractiveShell
+from IPython.display import display
+# Load environment variables from .env file
+load_dotenv('dot.env')
+pd.set_option('display.float_format', '{:.2f}'.format)  # Set float format
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+import pandas as pd
+import numpy as np
+
+def plot_monthly_data(df, date_column, plot_title):
+    """
+    Génère un histogramme horizontal mensuel avec palette viridis et valeurs visibles.
+    """
+    df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
+    df['Month'] = df[date_column].dt.strftime('%B %Y')
+
+    # Comptage mensuel
+    monthly_counts = df.groupby('Month')['case_id'].count().reset_index(name='count')
+
+    # Trier les mois
+    months_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                    'August', 'September', 'October', 'November', 'December']
+    years = sorted(monthly_counts['Month'].str.split().str[1].unique())
+    ordered_months = [f"{m} {y}" for y in years for m in months_order if f"{m} {y}" in monthly_counts['Month'].values]
+
+    monthly_counts['Month'] = pd.Categorical(monthly_counts['Month'], categories=ordered_months, ordered=True)
+    monthly_counts = monthly_counts.sort_values('Month')
+
+    # Couleurs Viridis
+    norm = plt.Normalize(monthly_counts['count'].min(), monthly_counts['count'].max())
+    viridis = cm.get_cmap('viridis')
+    colors = viridis(norm(monthly_counts['count'].values))
+
+    # Création du graphique
+    plt.figure(figsize=(14, 10))
+    bars = plt.barh(monthly_counts['Month'], monthly_counts['count'], color=colors)
+
+    for bar in bars:
+        width = bar.get_width()
+        label_x_pos = width + max(monthly_counts['count'].max() * 0.01, 0.5)  # espacement dynamique
+        label_y_pos = bar.get_y() + bar.get_height() / 2
+        plt.text(label_x_pos, label_y_pos, f'{int(width)}', va='center', ha='left',
+                 fontsize=14, weight='bold', color='black')
+
+    plt.title(plot_title, fontsize=16, weight='bold')
+    plt.xlabel('Nombre de cas', fontsize=13)
+    plt.ylabel('Mois', fontsize=13)
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_beneficiaries_by_categorie(df, lo_department, set_title, set_xlabel, set_ylabel):
+    # Configuration générale adaptée pour Quarto
+    sns.set(rc={'figure.figsize': (15, 10)})
+    sns.set_style("whitegrid")
+    sns.set_context("notebook", font_scale=1.2)
+
+    # Agréger et trier les données
+    sorted_data = df.groupby(lo_department).size().sort_values(ascending=False)
+    sorted_df = sorted_data.reset_index(name='count')
+
+    #Total des patients actifs
+    total_active_patients = sorted_df['count'].sum()
+
+    # Palette viridis adaptée pour web
+    n_colors = len(sorted_df)
+    palette = sns.color_palette("viridis", n_colors=n_colors)
+
+    # Tracé du graphique
+    ax = sns.barplot(
+        y=lo_department,
+        x='count',
+        data=sorted_df,
+        palette=palette
+    )
+
+    # Titre et labels
+    ax.set_title(f"{set_title}\nTotal bénéficiaires : {total_active_patients}", fontsize=16, weight='bold')
+    ax.set_xlabel(set_xlabel, fontsize=14)
+    ax.set_ylabel(set_ylabel, fontsize=14)
+
+    #Retrait de la grille
+    ax.grid(False)
+
+    # Ajout des valeurs sur les barres
+    for container in ax.containers:
+        ax.bar_label(container, padding=3, fontsize=12, color='black')
+
+    # Nettoyage des bordures
+    sns.despine()
+
+    # Ajustement
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_beneficiaries_by_categorie(df, lo_department, set_title, set_xlabel, set_ylabel):
+    # Configuration générale adaptée pour Quarto
+    sns.set(rc={'figure.figsize': (15, 10)})
+    sns.set_style("whitegrid")
+    sns.set_context("notebook", font_scale=1.2)
+
+    # Agréger et trier les données
+    sorted_data = df.groupby(lo_department).size().sort_values(ascending=False)
+    sorted_df = sorted_data.reset_index(name='count')
+
+    #Total des patients actifs
+    total_active_patients = sorted_df['count'].sum()
+
+    # Palette viridis adaptée pour web
+    n_colors = len(sorted_df)
+    palette = sns.color_palette("viridis", n_colors=n_colors)
+
+    # Tracé du graphique
+    ax = sns.barplot(
+        y=lo_department,
+        x='count',
+        data=sorted_df,
+        palette=palette
+    )
+
+    # Titre et labels
+    ax.set_title(f"{set_title}\nTotal bénéficiaires : {total_active_patients}", fontsize=16, weight='bold')
+    ax.set_xlabel(set_xlabel, fontsize=14)
+    ax.set_ylabel(set_ylabel, fontsize=14)
+
+    #Retrait de la grille
+    ax.grid(False)
+
+    # Ajout des valeurs sur les barres
+    for container in ax.containers:
+        ax.bar_label(container, padding=3, fontsize=12, color='black')
+
+    # Nettoyage des bordures
+    sns.despine()
+
+    # Ajustement
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python, echo=FALSE}
+enrole = pd.read_excel("enrole.xlsx",sheet_name=0)
+```
+# NOMBRE DE DEPISTAGES
+```{python, echo=FALSE}
+nutrition_depistage = pd.read_excel("nutrition_depistage.xlsx",sheet_name=0)
+```
+
+## NOMBRE DE DEPISTAGES EN NUTRITION PAR MOIS
+```{python, echo=FALSE}
+plot_monthly_data(nutrition_depistage, 'date_de_depistage',f'Nombre de dépistages réalisés par mois pour la periode\n Total : {nutrition_depistage.shape[0]}')
+```
+
+
+## NOMBRE DE DEPISTAGES EN NUTRITION PAR OFFICE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=nutrition_depistage,
+    lo_department='office',
+    set_title='Nombre de beneficiaires en nutrition par office',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+
+ 
+## NOMBRE DE DEPISTAGES EN NUTRITION PAR SEXE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=nutrition_depistage,
+    lo_department='gender',
+    set_title='Nombre de dépistage par sexe',
+    set_xlabel='Beneficiaires',
+    set_ylabel='sexe'
+)
+```
+
+
+# NOMBRE DE BENEFICIAIRES ELIGIBLES
+```{python, echo= FALSE}
+eligible = pd.read_excel("eligible.xlsx",sheet_name=0)
+```
+
+## NOMBRE DE BENEFICIAIRES ELIGIBLES PAR TYPE DE MALNUTRTION
+```{python, echo= FALSE}
+plot_beneficiaries_by_categorie(
+    df=eligible,
+    lo_department='manutrition_type',
+    set_title='Nombre de bénéficiaires eligibles par type de malnutrition',
+    set_xlabel='Beneficiaires',
+    set_ylabel='Malnutrition'
+)
+```
+
+## NOMBRE DE BENEFICIAIRES ELIGIBLES PAR SEXE
+```{python, echo= FALSE}
+plot_beneficiaries_by_categorie(
+    df=eligible,
+    lo_department='gender',
+    set_title='Nombre de dépistage par sexe',
+    set_xlabel='Beneficiaires',
+    set_ylabel='sexe'
+)
+```
+
+# NOMBRE DE BENEFICIAIRES ENROLÉS
+```{python, echo=FALSE}
+enrole = pd.read_excel("enrole.xlsx",sheet_name=0)
+```
+
+## NOMBRE DE BENEFICIAIRES ENROLÉS PAR OFFICE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=enrole,
+    lo_department='office',
+    set_title='Nombre de beneficiaires en nutrition par office',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+
+## NOMBRE DE BENEFICIAIRES ENROLÉS PAR SEXE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=enrole,
+    lo_department='gender',
+    set_title='Nombre de dépistage par sexe',
+    set_xlabel='Beneficiaires',
+    set_ylabel='sexe'
+)
+```
+
+
+## NOMBRE DE BENEFICIAIRES ENROLÉS PAR AGENT
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=enrole,
+    lo_department='opened_by_username',
+    set_title='Nombre de bénéficiaires servis par agent',
+    set_xlabel='Beneficiaires',
+    set_ylabel='agent'
+)
+```
+
+
+## LISTE DES ENROLÉS
+```{r,echo=FALSE}
+renrole<-py$enrole
+# DT::datatable(renrole, extensions = 'Buttons', filter = 'bottom',
+                                           options = list(dom = 'Bfrtip',
+                                                          columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                          initComplete = JS(
+                                                              "function(settings, json) {",
+                                                              "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+                                                              "}"),
+                                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                                          pageLength = 6)
+```
+
+# COMPTAGE DE MENAGE
+```{python, echo=FALSE}
+nut_avec_comptage = pd.read_excel("nut_avec_comptage.xlsx",sheet_name=0)
+```
+
+```{python, echo=FALSE}
+nut_sans_comptage = pd.read_excel("nut_sans_comptage.xlsx",sheet_name=0)
+```
+
+```{python, echo=FALSE}
+testing_hh = pd.read_excel("testing_hh.xlsx",sheet_name=0)
+```
+
+```{python, echo=FALSE}
+nut_sans_testing = pd.read_excel("nut_sans_testing.xlsx",sheet_name=0)
+```
+
+## REPARTITION DES BENEFICIAIRES COMPTÉS PAR OFFICE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=nut_avec_comptage,
+    lo_department='office',
+    set_title='Nombre de bénéficiaires comptés par office',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+
+
+## REPARTITION DES BENEFICIAIRES COMPTÉS PAR AGENT
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=nut_avec_comptage,
+    lo_department='last_modified_by_user_username',
+    set_title='Nombre de bénéficiaires comptés par office',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+
+
+## REPARTITION DES MENAGES COMPTÉS PAR OFFICE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=testing_hh,
+    lo_department='office',
+    set_title='Nombre de menages comptés par office',
+    set_xlabel='Beneficiaires',
+    set_ylabel='office'
+)
+```
+
+## REPARTITION DES MENAGES COMPTÉS PAR AGENT
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=testing_hh,
+    lo_department='last_modified_by_user_username',
+    set_title='Nombre de menages comptés par agent',
+    set_xlabel='Beneficiaires',
+    set_ylabel='agent'
+)
+```
+
+
+## NOMBRE DE MENAGE SANS DEPISTAGE
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+    df=nut_sans_testing,
+    lo_department='last_modified_by_user_username',
+    set_title='Nombre de menages sans dépistage par agent',
+    set_xlabel='Beneficiaires',
+    set_ylabel='agent'
+)
+```
+
+
+## LISTE DES BENEFICIAIRES SANS COMPTAGE
+```{r, echo= FALSE}
+rnut_sans_comptage <- py$nut_sans_comptage
+
+DT::datatable(
+  rnut_sans_comptage,
+  extensions = 'Buttons',
+  filter = 'bottom',
+  options = list(
+    dom = 'Bfrtip',
+    columnDefs = list(list(className = 'dt-center', targets = "_all")),
+    initComplete = DT::JS(
+      "function(settings, json) {",
+      "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+      "}"
+    ),
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    pageLength = 4
+  )
+)
+
+```
+
+## LISTE DES MENAGES SANS DEPISTAGE
+```{r, echo= FALSE}
+rnut_sans_testing <- py$nut_sans_testing
+
+DT::datatable(
+  rnut_sans_testing,
+  extensions = 'Buttons',
+  filter = 'bottom',
+  options = list(
+    dom = 'Bfrtip',
+    columnDefs = list(list(className = 'dt-center', targets = "_all")),
+    initComplete = DT::JS(
+      "function(settings, json) {",
+      "$(this.api().table().header()).css({'background-color': '#3E4827', 'color': '#fff'});",
+      "}"
+    ),
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    pageLength = 4
+  )
+)
+
+```

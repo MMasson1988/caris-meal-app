@@ -24,7 +24,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from utils import file_matches_today
 
 # ===================== CONFIG =====================
-DOWNLOAD_DIR = r"C:\Users\Downloads\caris-dashboard-app\data"
+DOWNLOAD_DIR = r"C:\Users\Downloads\caris-meal-app\data"
 
 # Liste des bases (sans date ni extension)
 EXPECTED_BASES = [

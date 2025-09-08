@@ -1,0 +1,3313 @@
+---
+title: "PROGRAMME PTME"
+subtitle: "Caris Foundation | Tracking des femmes enceintes en PTME"
+author: "M&E Department"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+format:
+  html:
+    theme: flatly
+    css:
+      - styles.css
+    fig-align: center
+    toc: true
+    toc-location: left           # Pour bien positionner la TOC à gauche
+    toc-depth: 2                 # Ajuste la profondeur de la TOC selon tes titres
+    number-sections: true
+    self-contained: true
+---
+<style>
+
+  /* Applique au titre de niveau 1 à 3 */
+  h2, h3 {
+    color: #003366;                             /* Bleu foncé pour les titres */
+    border-bottom: 2px solid #0055a5;           /* Ligne décorative sous les titres */
+    padding-bottom: 0.3em;                      /* Espace entre le titre et la ligne */
+  }
+
+  /* Applique aux en-têtes de colonne */
+  th {
+    background-color: #003366;                  /* Fond bleu foncé */
+    color: #fff;                                /* Texte blanc */
+    text-align: left;                           /* Alignement à gauche */
+    padding: 12px;                              /* Espace interne */
+  }
+
+  /* Applique aux cellules du tableau */
+  td {
+    padding: 10px;                              /* Espace interne */
+    border-top: 1px solid #ddd;                 /* Ligne de séparation entre lignes */
+  }
+
+  /* Applique une couleur de fond alternée à une ligne sur deux */
+  tr:nth-child(even) {
+    background-color: #f9f9f9;                  /* Fond gris très clair */
+  }
+
+  /* Style pour les cartes ("cards") visuelles */
+  .card {
+    background: white;                          /* Fond blanc */
+    border: 1px solid #ddd;                     /* Bordure grise claire */
+    border-radius: 10px;                        /* Coins arrondis */
+    padding: 1.5rem;                            /* Espace interne généreux */
+    margin-bottom: 2rem;                        /* Espace entre les cartes */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);       /* Ombre portée discrète */
+  }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
+```{r libraries, echo=FALSE,warning = FALSE, message = FALSE}
+Sys.setenv(TZ='GMT')
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(RMySQL))
+suppressPackageStartupMessages(library(odbc))
+suppressPackageStartupMessages(library(DBI))
+suppressPackageStartupMessages(library(viridis))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(ggiraphExtra))
+suppressPackageStartupMessages(library(hrbrthemes))
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(RColorBrewer))
+suppressPackageStartupMessages(library(tidytext))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(purrr))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(extrafont))
+suppressPackageStartupMessages(library(forcats))
+suppressPackageStartupMessages(library(DT))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(readxl))
+suppressPackageStartupMessages(library(writexl))
+suppressPackageStartupMessages(library(reticulate))
+```
+
+```{r, echo=FALSE}
+reticulate::use_python("C:/Users/moise/AppData/Local/Programs/Python/Python313/python.exe")
+
+#use_virtualenv("./../../python_env", required = TRUE)
+```
+
+```{python, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+#Import relevant libraries
+import os
+import re
+import time
+import warnings
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
+
+# Third-party imports
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+from itables import show, init_notebook_mode, options
+from IPython.display import display, HTML
+import openpyxl
+import xlsxwriter
+import pymysql
+from sqlalchemy import create_engine
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv('dot.env')
+pd.set_option('display.float_format', '{:.2f}'.format)  # Set float format
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+```
+
+
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+import pandas as pd
+
+def plot_monthly_data_oev(df, date_column, plot_title):
+    df[date_column] = pd.to_datetime(df[date_column])
+    df['Month'] = df[date_column].dt.strftime('%B %Y')
+    monthly_counts = df.groupby('Month')['patient_code'].count().reset_index()
+
+    months_order = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December']
+    
+    ordered_months = [f'{month} {year}' for year in sorted(monthly_counts['Month'].str.split(' ').str[1].unique()) 
+                      for month in months_order if f'{month} {year}' in monthly_counts['Month'].unique()]
+    
+    monthly_counts['Month'] = pd.Categorical(monthly_counts['Month'], categories=ordered_months, ordered=True)
+    monthly_counts = monthly_counts.sort_values(by='Month')
+
+    plt.figure(figsize=(12, 10))
+    
+    viridis = cm.get_cmap('viridis', len(monthly_counts))
+    colors = viridis(np.arange(len(monthly_counts)))
+    
+    bars = plt.barh(monthly_counts['Month'], monthly_counts['patient_code'], color=colors)
+
+    for bar in bars:
+        width = bar.get_width()
+        label_x_pos = width + 0.5
+        label_y_pos = bar.get_y() + bar.get_height() / 2
+        plt.text(label_x_pos, label_y_pos, f'{int(width)}', 
+                 va='center', ha='left', fontsize=12, fontweight='bold', color='black')
+
+    plt.title(plot_title, fontsize=14, fontweight='bold')
+    plt.xlabel('Number of Cases', fontsize=14, fontweight='bold')
+    plt.ylabel('Month', fontsize=14, fontweight='bold')
+
+    # Mettre les labels des ticks en gras
+    plt.xticks(fontsize=12, fontweight='bold')
+    plt.yticks(fontsize=12, fontweight='bold')
+
+    plt.grid(False)
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python, echo=FALSE}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def plot_beneficiaries_by_categorie(df, lo_department, set_title, set_xlabel, set_ylabel):
+    # Configuration générale adaptée pour Quarto
+    sns.set(rc={'figure.figsize': (15, 10)})
+    sns.set_style("whitegrid")
+    sns.set_context("notebook", font_scale=1.5)
+
+    # Agréger et trier les données
+    sorted_data = df.groupby(lo_department).size().sort_values(ascending=False)
+    sorted_df = sorted_data.reset_index(name='count')
+
+    #Total des patients actifs
+    total_active_patients = sorted_df['count'].sum()
+
+    # Palette viridis adaptée pour web
+    n_colors = len(sorted_df)
+    palette = sns.color_palette("viridis", n_colors=n_colors)
+
+    # Tracé du graphique
+    ax = sns.barplot(
+        y=lo_department,
+        x='count',
+        data=sorted_df,
+        palette=palette
+    )
+
+    # Titre et labels
+    ax.set_title(f"{set_title}\nTotal bénéficiaires : {total_active_patients}", fontsize=24, weight='bold')
+    ax.set_xlabel(set_xlabel, fontsize=22)
+    ax.set_ylabel(set_ylabel, fontsize=22)
+    #Retrait de la grille
+    ax.grid(False)
+
+    # Ajout des valeurs sur les barres
+    for container in ax.containers:
+        ax.bar_label(container, padding=5, fontsize=26, weight="bold", color='black')
+
+    # Nettoyage des bordures
+    sns.despine()
+
+    # Ajustement
+    plt.tight_layout()
+    plt.show()
+```
+
+
+```{r, echo=FALSE}
+library(lubridate)
+
+mois <- month(Sys.Date())
+annee <- year(Sys.Date())
+
+if (mois >= 10 && mois <= 12) {
+  trimestre <- "Q1"
+  fy <- annee + 1
+} else if (mois >= 1 && mois <= 3) {
+  trimestre <- "Q2"
+  fy <- annee
+} else if (mois >= 4 && mois <= 6) {
+  trimestre <- "Q3"
+  fy <- annee
+} else {
+  trimestre <- "Q4"
+  fy <- annee
+}
+
+fy_suffix <- substr(fy, 3, 4)
+
+knitr::asis_output(paste0("# GENÉRALITÉS DU PROGRAMME PTME EN ", trimestre, " FY", fy_suffix))
+```
+
+::: card
+## Répartition des femmes enceintes par bureau
+```{r, echo=FALSE}
+ptme_enceinte <- read_excel("ptme_enceinte.xlsx", sheet = 1)
+```
+
+
+```{python, echo=FALSE}
+ptme_enceinte = pd.read_excel("ptme_enceinte.xlsx",sheet_name=0)
+```
+
+
+```{python, echo=FALSE}
+plot_beneficiaries_by_categorie(
+  df = ptme_enceinte,
+  lo_department = "office",
+  set_title = "Nombre de femmes enceintes par bureau",
+  set_xlabel = "Nombre de femmes enceintes",
+  set_ylabel = "Bureau"
+)
+```
+:::
+
+## Liste des femmes en PTME
+```{r, echo=FALSE}
+rptme_enceinte<-py$ptme_enceinte
+
+DT::datatable(
+  rptme_enceinte,
+  extensions = 'Buttons',
+  filter = 'bottom',
+  options = list(
+    dom = 'Bfrtip',
+    columnDefs = list(list(className = 'dt-center', targets = "_all")),
+    initComplete = JS(
+      "function(settings, json) {",
+      "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+      "}"),
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    pageLength = 3
+  ),
+  callback = JS("
+    table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+      $(this.node()).css({'font-size': '16px', 'height': '20px'});
+    });
+  ")
+)
+```
+
+
+## Liste des accouchements délinquants
+```{r, echo=FALSE}
+delinquency <- read_excel("delinquency.xlsx", sheet = 1)
+DT::datatable(
+  delinquency,
+  extensions = 'Buttons',
+  filter = 'bottom',
+  options = list(
+    dom = 'Bfrtip',
+    columnDefs = list(list(className = 'dt-center', targets = "_all")),
+    initComplete = JS(
+      "function(settings, json) {",
+      "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+      "}"),
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    pageLength = 3
+  ),
+  callback = JS("
+    table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+      $(this.node()).css({'font-size': '16px', 'height': '20px'});
+    });
+  ")
+)
+```
+
+
+# CLUB PTME
+:::card
+## Nombre de femmes enceintes en club par bureau
+```{python, echo= FALSE}
+ptme_in_club = pd.read_excel("woman_in_club.xlsx",sheet_name=0)
+ptme_not_in_club = pd.read_excel("woman_in_club.xlsx",sheet_name=0)
+plot_beneficiaries_by_categorie(
+  df = ptme_in_club,
+  lo_department = "office",
+  set_title = "Nombre de femmes enceintes en club",
+  set_xlabel = "Nombre de femmes enceintes",
+  set_ylabel = "office"
+)
+```
+:::
+
+:::card
+## Nombre de femmes enceintes non en club par bureau
+```{python, echo= FALSE}
+ptme_not_in_club = pd.read_excel("woman_not_in_club.xlsx",sheet_name=0)
+plot_beneficiaries_by_categorie(
+  df = ptme_not_in_club,
+  lo_department = "office",
+  set_title = "Nombre de PTME non en club",
+  set_xlabel = "Nombre de femmes enceintes",
+  set_ylabel = "office"
+)
+```
+:::
+
+
+## Liste des PTME non en club
+```{python, echo= FALSE}
+info = pd.read_excel(
+    "site_info.xlsx",
+    sheet_name=0,
+    usecols=["site", "coordonnatrices", "nom_complet_agent", "username_agent"]
+)
+fe_non_club = pd.merge(ptme_not_in_club, info, on="site", how="left")
+```
+
+```{r, echo=FALSE}
+# Conversion explicite des objets Python en data.frame R
+df_tx_curr <- py$ptme_enceinte %>% as.data.frame()
+df_club <- py$ptme_in_club %>% as.data.frame()
+df_non_club <- py$fe_non_club %>% as.data.frame()
+```
+
+
+```{r, echo= FALSE}
+DT::datatable(
+  df_non_club,
+  extensions = 'Buttons',
+  filter = 'bottom',
+  options = list(
+    dom = 'Bfrtip',
+    columnDefs = list(list(className = 'dt-center', targets = "_all")),
+    initComplete = JS(
+      "function(settings, json) {",
+      "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+      "}"),
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    pageLength = 3
+  ),
+  callback = JS("
+    table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+      $(this.node()).css({'font-size': '16px', 'height': '20px'});
+    });
+  ")
+)
+```
+
+
+# COMPTAGE DE MENAGE
+
+:::card
+## Femmes enceintes avec comptage de menage
+```{python, echo= FALSE}
+ptme_avec_comptage = pd.read_excel("ptme_avec_comptage.xlsx",sheet_name=0)
+plot_beneficiaries_by_categorie(
+  df = ptme_avec_comptage,
+  lo_department = "office",
+  set_title = "Nombre de enceintes avec un comptage de menage",
+  set_xlabel = "Nombre de femmes enceintes",
+  set_ylabel = "office"
+)
+```
+:::
+
+
+:::card
+## Femmes enceintes sans comptage de menage
+```{python, echo= FALSE}
+ptme_sans_comptage = pd.read_excel("ptme_sans_comptage.xlsx",sheet_name=0)
+plot_beneficiaries_by_categorie(
+  df = ptme_sans_comptage,
+  lo_department = "office",
+  set_title = "Nombre de enceintes sans un comptage de menage",
+  set_xlabel = "Nombre de enceintes",
+  set_ylabel = "office"
+)
+```
+:::
+
+## Liste des femmes enceintes sans comptage
+```{python, echo=FALSE}
+ptme_zero_comptage = pd.merge(ptme_sans_comptage, info, on="site", how="left")
+```
+
+```{r, echo=FALSE}
+rptme_zero_comptage<-py$ptme_zero_comptage
+if(nrow(rptme_zero_comptage)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(rptme_zero_comptage, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+      "function(settings, json) {",
+      "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+      "}"),
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+    pageLength = 3
+  ),
+  callback = JS("
+    table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+      $(this.node()).css({'font-size': '16px', 'height': '20px'});
+    });
+  ")
+)}
+```
+
+
+
+```{r, echo=FALSE}
+#Modify only the end_date_club
+start_date_club='2018-01-01'
+end_date_club='2025-08-30'
+
+
+es=dbSendQuery(
+  dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+ 
+  gsubfn::fn$identity("SELECT w.*, sum(month(w.session_date)=10) as oct, sum(month(w.session_date)=11) as nov,
+sum(month(w.session_date)=12) as decem, sum(month(w.session_date)=1) as jan,
+sum(month(w.session_date)=2) as fev,sum(month(w.session_date)=3) as mar,
+sum(month(w.session_date)=4) as avr, sum(month(w.session_date)=5) as mai,
+sum(month(w.session_date)=6) as juin,sum(month(w.session_date)=7) as juil,
+sum(month(w.session_date)=8) as aout,sum(month(w.session_date)=9) as sep 
+FROM (SELECT
+    IF(p.linked_to_id_patient > 0,
+        p.linked_to_id_patient,
+        p.id) AS id_patient,
+        
+    lh.name AS hopital,
+    CONCAT(lh.city_code, '/', lh.hospital_code) AS site_code, lh.office as office, lce.name as Commune, lnt.name as network,
+    c.name AS club_name,
+    lct.name AS club_type,
+    p.patient_code,
+    cs.date AS session_date,
+    lctc.name_fr AS topic,
+    a.date AS first_attendance_date,
+    b.date AS last_attendance_date,
+    aa.date as first_attendance_date_by_club,
+    COALESCE(ti.first_name, tm.first_name) AS first_name,
+    COALESCE(ti.last_name, tm.last_name) AS last_name,
+    COALESCE(ti.dob, tm.dob) AS dob,
+    coalesce(ti.is_abandoned, tm.is_abandoned) as is_abandoned,
+    coalesce( ti.is_dead, tm.is_dead) as is_dead,
+        if(tm.is_graduate=1,'Yes','Non') as graduation,
+    tm.graduation_date as graduation_date,
+    IF(ti.gender=1,'male',IF(ti.gender=2,'female',IF(ti.gender=3,'unknown',ti.gender))) as sex,
+    ss.clore,
+    ss.nbre_deparasitaires,
+    ss.nbre_preservatifs,
+    ss.nbre_vit_a,
+    ss.nbre_moustiquaires,
+    ss.code,
+    ss.is_patient_tb,
+    is_patient_on_pf,
+    adh
+FROM
+    session ss
+        LEFT JOIN
+    club_session cs ON cs.id = ss.id_club_session
+        LEFT JOIN
+    club c ON c.id = cs.id_club
+        LEFT JOIN
+    lookup_club_type lct ON lct.id = c.club_type
+        LEFT JOIN
+    lookup_club_topic lctc ON lctc.id = cs.topic
+        LEFT JOIN
+    patient p ON p.id = ss.id_patient
+        LEFT JOIN
+    tracking_motherbasicinfo tm ON tm.id_patient = IF(p.linked_to_id_patient > 0,
+        p.linked_to_id_patient,
+        ss.id_patient)
+        LEFT JOIN
+    tracking_infant ti ON ti.id_patient = IF(p.linked_to_id_patient > 0,
+        p.linked_to_id_patient,
+        ss.id_patient)
+        LEFT JOIN
+    lookup_hospital lh ON lh.id = c.id_hospital
+    left join lookup_commune lce on lce.id=lh.commune
+    left join lookup_network lnt on lnt.id=lh.network
+        LEFT JOIN
+    (SELECT 
+        MIN(cs1.date) AS 'date', s1.id_patient,main_id
+    FROM
+        session s1
+    LEFT JOIN club_session cs1 ON cs1.id = s1.id_club_session
+    LEFT join (select p12.*,IF(p12.linked_to_id_patient>0,p12.linked_to_id_patient,p12.id) as main_id from patient p12) pp on pp.id=s1.id_patient
+    WHERE
+        s1.is_present = 1
+    GROUP BY pp.main_id ) a ON a.main_id = IF(p.linked_to_id_patient > 0,
+        p.linked_to_id_patient,
+        p.id)
+        LEFT JOIN
+    (SELECT 
+        MAX(cs2.date) AS 'date', s2.id_patient
+    FROM
+        session s2
+    LEFT JOIN club_session cs2 ON cs2.id = s2.id_club_session
+    WHERE
+        s2.is_present = 1
+    GROUP BY s2.id_patient) b ON b.id_patient = ss.id_patient
+    
+    
+            LEFT JOIN
+    (SELECT 
+        MIN(cs3.date) AS 'date', s3.id_patient, cs3.id_club
+    FROM
+        session s3
+    LEFT JOIN club_session cs3 ON cs3.id = s3.id_club_session
+    WHERE
+        s3.is_present = 1
+    GROUP BY cs3.id_club, s3.id_patient) aa ON aa.id_patient = ss.id_patient and c.id=aa.id_club
+    
+    
+WHERE
+(cs.date between '`start_date_club`' AND '`end_date_club`') AND 
+    ss.is_present = 1 AND p.id IS NOT NULL
+ORDER BY CONCAT(lh.city_code, '/', lh.hospital_code) , c.name , p.patient_code , cs.date
+) as w group by w.patient_code
+
+LIMIT 100000000"
+))
+
+  #Fetching the data
+data_infos_club = fetch(es, n=-1)
+
+data_infos_club = data_infos_club %>%
+  filter(!office %in% c("CAY","JER"))
+
+```
+
+
+```{r, echo=FALSE}
+#Data processing
+data_infos_club$is_abandoned[is.na(data_infos_club$is_abandoned)]<-0
+data_infos_club$is_dead[is.na(data_infos_club$is_dead)]<-0
+data_infos_club$graduation[is.na(data_infos_club$graduation)]<-'Non'
+data_infos_club$graduation[data_infos_club$graduation == '']<-'Non'
+data_infos_club$graduation_date[is.na(data_infos_club$graduation_date)]<-'0000-00-00'
+
+club_infos<-data_infos_club%>%
+  filter(club_type=='Club Mere')%>%
+  distinct(patient_code, .keep_all = TRUE)%>%
+  select(patient_code,hopital,office, dob,club_name,last_attendance_date,graduation, graduation_date)
+write_xlsx(club_infos, path = "club_infos.xlsx")
+#nrow(club_infos)
+```
+
+
+
+```{r date, echo=FALSE}
+library(lubridate)
+
+# Obtenir la date du début de la semaine actuelle (lundi)
+d <- floor_date(Sys.Date(), unit = "week", week_start = 1)
+
+# Obtenir la date du lundi de la semaine précédente (1 jours avant, puis arrondi à la semaine)
+prev <- floor_date(d - 1, unit = "week", week_start = 1)
+
+# Obtenir une date 6 jours après 'prev'
+after <- prev + days(6)
+
+# Affichage (optionnel)
+#prev
+#after
+```
+
+
+
+```{python phone number,echo=FALSE, message=FALSE, warning=FALSE}
+from datetime import date
+#Mastersheet club
+py_p_start = date.today()
+py_p_end = date.today()
+py_start_date = date.today() + relativedelta(months = -24)
+py_end_date = date.today() + relativedelta(months = 9)
+```
+
+
+
+```{r phone number suite, echo=FALSE}
+#Downloading the phone number data for women on mastersheet
+
+#Convert python date object into R one (with single quote)
+p_start0=as.Date(py$py_p_start)
+p_start<-sQuote(p_start0,options(useFancyQuotes = TRUE))
+
+p_end0=as.Date(py$py_p_end)
+p_end<-sQuote(p_end0,options(useFancyQuotes = TRUE))
+
+start_date0=as.Date(py$py_start_date)
+start_date<-sQuote(start_date0,options(useFancyQuotes = TRUE))
+
+
+end_date0=as.Date(py$py_end_date)
+end_date<-sQuote(end_date0,options(useFancyQuotes = TRUE))
+
+
+#PTME SQL Query
+tel_ptme<-dbSendQuery(
+    dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+    
+   gsubfn::fn$identity(
+     
+   "
+select a.*,
+p.patient_code, 
+tmi.telephone as telephone1 , 
+tmi.telephone2 as Telephone2
+
+ from 
+((SELECT
+        tmi.id_patient
+    FROM
+        tracking_pregnancy tp
+    LEFT JOIN tracking_motherbasicinfo tmi ON tmi.id_patient = tp.id_patient_mother
+    WHERE
+        (tp.dpa BETWEEN `start_date` AND `end_date`)
+            OR ((tp.ddr + INTERVAL 9 MONTH + INTERVAL 7 DAY) BETWEEN `start_date` AND `end_date`)
+            OR (tp.actual_delivery_date BETWEEN `start_date` AND `end_date`) OR (tp.created_at between `p_start` and `p_end`) OR (tmi.created_at between `p_start` and `p_end`))
+            UNION (SELECT
+        p.id AS id_patient
+    FROM
+        testing_mereenfant tme
+    LEFT JOIN patient p ON p.patient_code = CONCAT(tme.mother_city_code, '/', tme.mother_hospital_code, '/', tme.mother_code)
+    WHERE
+        tme.infant_dob BETWEEN `start_date` AND `end_date`) UNION (SELECT
+        id_patient_mother AS id_patient
+    FROM
+        tracking_children tc
+        LEFT JOIN tracking_motherbasicinfo tmi2 on tmi2.id_patient = tc.id_patient_mother
+    LEFT JOIN testing_mereenfant tm ON tm.id_patient = tc.id_patient_child
+    WHERE (tmi2.id is not null) AND
+        (tm.infant_dob BETWEEN `start_date` AND `end_date`)
+            OR (tc.dob BETWEEN `start_date` AND `end_date`))) a
+            left join tracking_motherbasicinfo tmi on a.id_patient=tmi.id_patient
+            left join patient p on a.id_patient = p.id
+   "  
+     
+))
+
+
+tel=fetch(tel_ptme,n=-1)
+
+```
+
+
+
+
+```{r,echo=FALSE}
+tel$telephone1[is.na(tel$telephone1)]<-'---'
+tel$Telephone2[is.na(tel$Telephone2)]<-'---'
+tel$telephone1[tel$telephone1=='']<-'---'
+tel$Telephone2[tel$Telephone2=='']<-'---'
+tel = tel%>%
+  distinct(patient_code, .keep_all=T)
+
+```
+
+```{r, echo=FALSE}
+write_xlsx(tel, path = "tel_ptme.xlsx")
+```
+
+```{r ovc_serv mother helper, echo=FALSE}
+#Importing the ovc_serv dataset
+#Current quarter
+#start_date <- '2024-04-01'
+#end_date <- '2024-06-30'
+start_date <- '2025-01-01'
+end_date <- '2025-03-31'
+#Last quarter
+#start_date_last <- '2024-01-01'
+#end_date_last <- '2024-03-31'
+start_date_last <- '2025-04-01'
+end_date_last <- '2025-06-31'
+
+ptme_serv=dbSendQuery(
+          dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+          
+          gsubfn::fn$identity("SELECT bot.patient_code,
+    IF(p.id is null,'no','yes') as is_patient_on_hivhaiti,
+    IF(club_q1 IS NOT NULL,
+        'yes',
+        IF(quest_q1 IS NOT NULL,
+            'yes',
+            IF(arv_1 IS NOT NULL,
+                'yes',
+                IF(odk_1 IS NOT NULL,
+                    'yes',
+                    IF(ptme_1 IS NOT NULL,
+                        'yes',
+                        IF(ptme1_1 IS NOT NULL,
+                            'yes',
+                            IF(mereenfant_1 IS NOT NULL,
+                                'yes',
+                                IF(opf_q1.case_id IS NOT NULL ,'yes',
+                                IF(tmf_q1.patient_code IS NOT NULL,'yes',
+                                IF(tpv_q1.patient_code IS NOT NULL,'yes',
+                                IF(oto1.patient_code IS NOT NULL,'yes',
+                                'no'))))))))))) AS q1,
+    IF(club_q2 IS NOT NULL,
+        'yes',
+        IF(quest_q2 IS NOT NULL,
+            'yes',
+            IF(arv_2 IS NOT NULL,
+                'yes',
+                IF(odk_2 IS NOT NULL,
+                    'yes',
+                    IF(ptme_2 IS NOT NULL,
+                        'yes',
+                        IF(ptme1_2 IS NOT NULL,
+                            'yes',
+                            IF(mereenfant_2 IS NOT NULL,
+                                'yes',
+                                IF(opf_q2.case_id IS NOT NULL ,
+                                'yes',
+                                IF(tmf_q2.patient_code IS NOT NULL, 'yes',
+                                IF(oto2.patient_code IS NOT NULL, 'yes',
+                                IF(tpv_q2.patient_code IS NOT NULL,'yes','no'))))))))))) AS q2,
+    IF(club_q1 IS NOT NULL, 'yes', 'no') AS club_q1,
+    IF(club_q2 IS NOT NULL, 'yes', 'no') AS club_q2,
+    IF(quest_q1 IS NOT NULL, 'yes', 'no') AS quest_q1,
+    IF(quest_q2 IS NOT NULL, 'yes', 'no') AS quest_q2,
+    IF(arv_1 IS NOT NULL, 'yes', 'no') AS on_arv_q1,
+    IF(arv_2 IS NOT NULL, 'yes', 'no') AS on_arv_q2,
+    IF(odk_1 IS NOT NULL, 'yes', 'no') AS odk_q1,
+    IF(odk_2 IS NOT NULL, 'yes', 'no') AS odk_q2,
+    IF(tmf_q1.patient_code IS NOT NULL, 'yes','no')  as followup_q1,
+    IF(tmf_q2.patient_code IS NOT NULL, 'yes','no')  as followup_q2,
+    IF(tpv_q1.patient_code IS NOT NULL,'yes','no') as visit_ptme_q1,
+    IF(tpv_q2.patient_code IS NOT NULL,'yes','no') as visit_ptme_q2,
+    IF(oto1.patient_code IS NOT NULL,'yes','no') as visit_ptme_ratio_q1,
+    IF(oto2.patient_code IS NOT NULL,'yes','no') as visit_ptme_ratio_q2,
+
+    IF(opf_q1.case_id IS NOT NULL ,'yes','no') AS odk_phone_followup_q1,
+    IF(opf_q2.case_id IS NOT NULL ,'yes','no') AS odk_phone_followup_q2,
+    if(tmf_q1.patient_code IS NOT NULL,'yes','no') as mother_followup_q1,
+    if(tmf_q2.patient_code IS NOT NULL,'yes','no') as mother_followup_q2,
+    IF(COALESCE(ptme_1, ptme1_1) IS NOT NULL,
+        'yes',
+        'no') AS ptme_q1,
+    IF(COALESCE(ptme_2, ptme1_2) IS NOT NULL,
+        'yes',
+        'no') AS ptme_q2,
+    IF(mereenfant_1 IS NOT NULL,
+        'yes',
+        'no') AS mereenfant_q1,
+    IF(mereenfant_2 IS NOT NULL,
+        'yes',
+        'no') AS mereenfant_q2,
+    office,
+    p.created_at as patient_created_date,
+    IF(p.created_at BETWEEN '`start_date`' AND '`end_date`' , 'yes','no') as is_patient_created_on_q2,
+    IF(tr.id_patient is not null , 'yes','no') as on_arv,
+    tmi.dob,
+    tmi.is_dead,
+    tmi.is_abandoned
+FROM
+    (SELECT
+        *
+    FROM
+        (SELECT
+        patient_code
+    FROM
+        tracking_motherbasicinfo
+    LEFT JOIN patient ON patient.id = tracking_motherbasicinfo.id_patient) o UNION (SELECT
+        health_id AS patient_code
+    FROM
+        openfn.odk_pregnancy_visit
+    WHERE
+        date_of_visit BETWEEN '`start_date_last`' AND '`end_date`') 
+        ## ODK PHONE FOLLOWUP START
+        UNION (
+        select topf.patient_code as patient_code from tracking_odk_phone_followup topf 
+			where topf.eccm_joignable_par_tel!=0 and (topf.eccm_date between '`start_date_last`' AND '`end_date`') and topf.name='Enquette Corona club meres'
+        )
+        ## ODK PHONE FOLLOWUP END
+
+        UNION (
+
+          select tpv.patient_code from tracking_ptme_visit tpv where tpv.date_of_visit between '`start_date_last`' AND '`end_date`'
+        
+        )
+        ## ODK Ratio Visits
+        UNION (
+           select opt.patient_code from odk_tracking_other_visit_ptme opt where opt.date_of_visit between '`start_date_last`' AND '`end_date`' 
+        )
+        ) bot
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS club_q2
+    FROM
+        session
+    LEFT JOIN club_session ON club_session.id = session.id_club_session
+    LEFT JOIN patient ON patient.id = session.id_patient
+    WHERE
+        is_present = 1
+            AND club_session.date BETWEEN '`start_date`' AND '`end_date`') c2 ON club_q2 = bot.patient_code
+        LEFT JOIN
+    patient ON patient.patient_code = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS club_q1
+    FROM
+        session
+    LEFT JOIN club_session ON club_session.id = session.id_club_session
+    LEFT JOIN patient ON patient.id = session.id_patient
+    WHERE
+        is_present = 1
+            AND club_session.date BETWEEN '`start_date_last`' AND '`end_date_last`') c1 ON club_q1 = bot.patient_code
+        LEFT JOIN
+    (SELECT
+        patient_code AS quest_q1, date
+    FROM
+        (SELECT
+        id_patient, date
+    FROM
+        questionnaire_motherhivknowledge UNION SELECT
+        id_patient, date
+    FROM
+        questionnaire_mothersurvey UNION SELECT
+        id_patient, date
+    FROM
+        questionnaire_newmotherhivknowledge) x
+    LEFT JOIN patient ON patient.id = x.id_patient
+    WHERE
+        date BETWEEN '`start_date_last`' AND '`end_date_last`') quest ON quest_q1 = bot.patient_code
+        LEFT JOIN
+    (SELECT
+        patient_code AS quest_q2
+    FROM
+        (SELECT
+        id_patient
+    FROM
+        questionnaire_motherhivknowledge
+    WHERE
+        date BETWEEN '`start_date`' AND '`end_date`' UNION SELECT
+        id_patient
+    FROM
+        questionnaire_mothersurvey
+    WHERE
+        date BETWEEN '`start_date`' AND '`end_date`' UNION SELECT
+        id_patient
+    FROM
+        questionnaire_newmotherhivknowledge
+    WHERE
+        date BETWEEN '`start_date`' AND '`end_date`') y
+    LEFT JOIN patient ON patient.id = y.id_patient) ques ON quest_q2 = bot.patient_code
+        LEFT JOIN
+    lookup_hospital ON CONCAT(lookup_hospital.city_code,
+            '/',
+            lookup_hospital.hospital_code) = LEFT(patient.patient_code, 8)
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS arv_1
+    FROM
+        tracking_regime
+    LEFT JOIN patient ON patient.id = id_patient
+    WHERE
+        (start_date BETWEEN '`start_date_last`' AND '`end_date_last`'
+            OR end_date BETWEEN '`start_date_last`' AND '`end_date_last`')
+            AND category = 'regime_mother_treatment') ar ON arv_1 = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS arv_2
+    FROM
+        tracking_regime
+    LEFT JOIN patient ON patient.id = id_patient
+    WHERE
+        (start_date BETWEEN '`start_date`' AND '`end_date`'
+            OR end_date BETWEEN '`start_date`' AND '`end_date`')
+            AND category = 'regime_mother_treatment') arv ON arv_2 = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        health_id AS odk_1
+    FROM
+        openfn.odk_pregnancy_visit
+    WHERE
+        date_of_visit BETWEEN '`start_date_last`' AND '`end_date_last`') odk1 ON odk_1 = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        health_id AS odk_2
+    FROM
+        openfn.odk_pregnancy_visit
+    WHERE
+        date_of_visit BETWEEN '`start_date`' AND '`end_date`') odk2 ON odk_2 = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS ptme_1
+    FROM
+        tracking_pregnancy
+    LEFT JOIN patient ON patient.id = id_patient_mother
+    WHERE
+        (ptme_enrollment_date BETWEEN '`start_date_last`' AND '`end_date_last`')
+            OR (actual_delivery_date BETWEEN '`start_date_last`' AND '`end_date_last`')) ptme1 ON ptme_1 = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS ptme_2
+    FROM
+        tracking_pregnancy
+    LEFT JOIN patient ON patient.id = id_patient_mother
+    WHERE
+        (ptme_enrollment_date BETWEEN '`start_date`' AND '`end_date`')
+            OR (actual_delivery_date BETWEEN '`start_date`' AND '`end_date`')) ptme2 ON ptme_2 = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS ptme1_1
+    FROM
+        tracking_motherbasicinfo
+    LEFT JOIN patient ON patient.id = id_patient
+    WHERE
+        PTME_date BETWEEN '`start_date_last`' AND '`end_date_last`') pt1 ON ptme1_1 = bot.patient_code
+        LEFT JOIN
+    (SELECT DISTINCT
+        patient_code AS ptme1_2
+    FROM
+        tracking_motherbasicinfo
+    LEFT JOIN patient ON patient.id = id_patient
+    WHERE
+        PTME_date BETWEEN '`start_date`' AND '`end_date`') pt2 ON ptme1_2 = bot.patient_code
+        LEFT JOIN
+    (SELECT
+        patient.patient_code AS mereenfant_1
+    FROM
+        tracking_motherbasicinfo
+    LEFT JOIN patient ON patient.id = tracking_motherbasicinfo.id_patient
+    LEFT JOIN testing_mereenfant ON CONCAT(testing_mereenfant.mother_city_code, '/', testing_mereenfant.mother_hospital_code, '/', testing_mereenfant.mother_code) = patient_code
+    WHERE
+        date BETWEEN '`start_date_last`' AND '`end_date_last`'
+            AND patient_code IS NOT NULL
+    GROUP BY patient_code) me1 ON mereenfant_1 = bot.patient_code
+        LEFT JOIN
+    (SELECT
+        patient.patient_code AS mereenfant_2
+    FROM
+        tracking_motherbasicinfo
+    LEFT JOIN patient ON patient.id = tracking_motherbasicinfo.id_patient
+    LEFT JOIN testing_mereenfant ON CONCAT(testing_mereenfant.mother_city_code, '/', testing_mereenfant.mother_hospital_code, '/', testing_mereenfant.mother_code) = patient_code
+    WHERE
+        date BETWEEN '`start_date`' AND '`end_date`'
+            AND patient_code IS NOT NULL
+    GROUP BY patient_code) me2 ON mereenfant_2 = bot.patient_code
+    left join patient p on p.patient_code=bot.patient_code
+    ## ODK FOLLOWUP PHONE END
+	LEFT JOIN (
+    select case_id,eccm_date, topf.patient_code from tracking_odk_phone_followup topf
+    where topf.eccm_joignable_par_tel!=0 and topf.eccm_date BETWEEN '`start_date_last`' AND '`end_date_last`' group by topf.case_id
+    ) opf_q1 on opf_q1.patient_code= bot.patient_code
+	LEFT JOIN (
+    select case_id,eccm_date, topf.patient_code from tracking_odk_phone_followup topf
+    where topf.eccm_joignable_par_tel!=0 and topf.eccm_date BETWEEN '`start_date`' AND '`end_date`' group by topf.case_id
+    ) opf_q2 on opf_q2.patient_code= bot.patient_code
+    
+	## MOTHER FOLLOWUP  START
+	LEFT JOIN (
+    select tmf.date, p.patient_code from tracking_motherfollowup tmf
+    left join patient p on p.id=tmf.id_patient
+    where  tmf.date BETWEEN '`start_date_last`' AND '`end_date_last`' group by tmf.id_patient
+    ) tmf_q1 on tmf_q1.patient_code= bot.patient_code
+	LEFT JOIN (
+    select tmf.date, p.patient_code from tracking_motherfollowup tmf
+    left join patient p on p.id=tmf.id_patient
+    where  tmf.date BETWEEN '`start_date`' AND '`end_date`' group by tmf.id_patient
+    ) tmf_q2 on tmf_q2.patient_code= bot.patient_code
+    
+    ##  MOTHER FOLLOWUP END
+
+	## MOTHER Agent visit ptme  START
+	LEFT JOIN (
+    select tpv.date_of_visit, tpv.patient_code from tracking_ptme_visit tpv
+    where  tpv.date_of_visit BETWEEN '`start_date_last`' AND '`end_date_last`' group by tpv.patient_code
+    ) tpv_q1 on tpv_q1.patient_code= bot.patient_code
+	LEFT JOIN (
+    select tpv.date_of_visit, tpv.patient_code from tracking_ptme_visit tpv
+    where  tpv.date_of_visit BETWEEN '`start_date`' AND '`end_date`' group by tpv.patient_code
+    ) tpv_q2 on tpv_q2.patient_code= bot.patient_code
+    
+    ##  MOTHER Agent visit ptme END
+    
+    ## MOTHER ratio start
+    
+    LEFT JOIN (
+    select oto11.date_of_visit, oto11.patient_code from odk_tracking_other_visit_ptme oto11 
+    where oto11.date_of_visit BETWEEN '`start_date_last`' AND '`end_date_last`' group by oto11.patient_code
+    ) oto1 on oto1.patient_code= bot.patient_code
+	LEFT JOIN (
+    select oto21.date_of_visit, oto21.patient_code from odk_tracking_other_visit_ptme oto21 
+    where oto21.date_of_visit BETWEEN '`start_date`' AND '`end_date`' group by oto21.patient_code
+    ) oto2 on oto2.patient_code= bot.patient_code
+    
+    ## MOTHER ratio end
+    left join tracking_motherbasicinfo tmi on tmi.id_patient=p.id
+    left join (select distinct id_patient from tracking_regime where category='regime_mother_treatment' and (id_arv is not null) and id_arv!=0  ) tr  on tr.id_patient=p.id
+WHERE
+    (p.linked_to_id_patient = 0 or p.linked_to_id_patient is null)
+        AND (club_q1 IS NOT NULL
+        OR club_q2 IS NOT NULL
+        OR quest_q1 IS NOT NULL
+        OR quest_q2 IS NOT NULL
+        OR arv_1 IS NOT NULL
+        OR arv_2 IS NOT NULL
+        OR odk_1 IS NOT NULL
+        OR odk_2 IS NOT NULL
+        OR ptme_1 IS NOT NULL
+        OR ptme_2 IS NOT NULL
+        OR ptme1_1 IS NOT NULL
+        OR ptme1_2 IS NOT NULL
+        OR mereenfant_1 IS NOT NULL
+        OR mereenfant_2 IS NOT NULL
+        OR opf_q1.case_id IS NOT NULL
+        OR opf_q2.case_id IS NOT NUlL
+        OR tmf_q1.patient_code IS NOT NULL
+        OR tmf_q2.patient_code IS NOT NULL
+        OR tpv_q1.patient_code IS NOT NULL 
+        OR tpv_q2.patient_code IS NOT NULL
+        OR oto1.patient_code IS NOT NULL
+        OR oto2.patient_code IS NOT NULL
+        
+        )
+GROUP BY bot.patient_code"))
+    
+serv_ptme2=fetch(ptme_serv,n=-1)%>%
+  mutate(site_code = substr(patient_code, 1,8))
+```
+
+```{r, echo=FALSE}
+serv_ptme1 <- read_excel("ptme_enceinte.xlsx", sheet = 1)
+serv_ptme_clean <- serv_ptme2 %>%
+  select(-office, -dob, -is_dead, -is_abandoned, -on_arv)
+# Fusion sans ces colonnes
+serv_ptme <- left_join(serv_ptme1, serv_ptme_clean, by = 'patient_code') %>%
+  mutate(site_code = substr(patient_code, 1, 8))
+write_xlsx(serv_ptme, path = "serv_ptme.xlsx")
+```
+
+
+```{r, echo=FALSE}
+library(dplyr)
+library(lubridate)
+serv_ptme_app1 = left_join(serv_ptme1, club_infos %>% select(-dob, -office), by = 'patient_code')
+
+serv_ptme_app1 <- serv_ptme_app1 %>%
+  mutate(
+    last_attendance_date = as.Date(last_attendance_date),
+    club_q1 = if_else(
+      year(last_attendance_date) == year(Sys.Date()) & month(last_attendance_date) %in% 1:3,
+      "yes", "no", missing = "no"
+    ),
+    club_q2 = if_else(
+      year(last_attendance_date) == year(Sys.Date()) & month(last_attendance_date) %in% 4:6,
+      "yes", "no", missing = "no"
+    )
+  )
+write_xlsx(serv_ptme_app1, path = "serv_ptme_app1.xlsx")
+```
+
+
+```{r,echo=FALSE}
+#Importing the comptage_menage data
+library(readxl)
+library(dplyr)
+# Définir le chemin de base
+first_part <- "C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data\\"
+
+# Charger les données du fichier "Ajout de menages ptme [officiel] <date>.xlsx"
+name_part_ptme <- "Ajout de menages ptme [officiel] "
+file_ptme <- paste0(first_part, name_part_ptme, Sys.Date(), ".xlsx")
+
+compt_ptme0 <- read_excel(file_ptme, sheet = 1)
+
+compt_ptme <- compt_ptme0 %>%
+  select(`form.case.@case_id`, form.is_accepted) %>%
+  rename(
+    is_accepted = form.is_accepted,
+    case_id = `form.case.@case_id`
+  )
+accept = compt_ptme0%>%
+  select(`form.case.@case_id`,form.is_accepted)%>%
+  rename(is_accepted = form.is_accepted,
+         case_id = `form.case.@case_id`)%>%
+  filter(is_accepted == '0')
+
+
+# Charger le fichier "PTME WITH PATIENT CODE <date>.xlsx"
+file_patient <- paste0(first_part, "PTME WITH PATIENT CODE ", Sys.Date(), ".xlsx")
+
+id_patient1 <- read_excel(file_patient, sheet = 1)
+# 
+id_patient <- id_patient1 %>%
+  rename(
+    case_id = caseid,
+    patient_code = health_id)
+
+accept = left_join(accept, id_patient, by = 'case_id')%>%
+filter(!is.na(patient_code))%>%
+distinct(patient_code, .keep_all = T)
+#accept
+```
+
+
+
+```{r,echo=FALSE}
+name_part_ptme="household mother "
+compt_ptme4<-read_excel(paste(first_part,name_part_ptme,sep="",Sys.Date(),".xlsx"),sheet = 1)
+
+compt_ptme1<-compt_ptme4%>%
+  select(patient_code,age_in_year,ptme_relationship,full_code_patient_menage,
+         hiv_test,hiv_test_result,caseid,non_consent_reason)
+
+compt_ptme1$patient_code<-as.factor(compt_ptme1$patient_code)
+compt_ptme1$age_in_year<-as.numeric(compt_ptme1$age_in_year)
+compt_ptme1$patient_code <- gsub('[[:blank:]]', '',compt_ptme1$patient_code)
+```
+
+
+```{r,echo=FALSE}
+compt_ess_ptme =left_join(compt_ptme,id_patient,by="case_id")%>%
+  group_by(patient_code)%>%
+  count()
+#head(compt_ess_ptme,3)               
+```
+
+
+```{r,echo=FALSE}
+comm_ptme_mix<-left_join(serv_ptme1,compt_ess_ptme,by="patient_code")%>%
+  rename(on_commCare=n)
+```
+
+```{r,echo=FALSE}
+stat_ptme_index<-compt_ptme1%>%
+  select(patient_code,age_in_year,ptme_relationship,full_code_patient_menage,
+         hiv_test,hiv_test_result,non_consent_reason,caseid)
+
+stat_ptme_index<-left_join(comm_ptme_mix,stat_ptme_index,by="patient_code")%>%
+  filter(!is.na(caseid))
+write_xlsx(stat_ptme_index, "stat_ptme_index.xlsx")
+```
+
+
+## Représentation graphique des bénéficiaires indirects par bureau
+:::card
+```{python, echo=FALSE}
+stat_ptme_index = pd.read_excel("stat_ptme_index.xlsx")
+plot_beneficiaries_by_categorie(
+  df = stat_ptme_index,
+  lo_department = "office",
+  set_title = "Nombre de bénéficiaires indirects par bureau",
+  set_xlabel = "Nombre de bénéficiaires indirects",
+  set_ylabel = "Bureau"
+)
+```
+:::
+
+# INDEX TESTING
+## Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…
+```{r,echo=FALSE}
+#Effectif enfants
+
+eff_enf<-stat_ptme_index%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17))%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# Enfants`=n)
+
+
+#Enfants testes
+enf_test<-stat_ptme_index%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & 
+           (hiv_test=="1" | hiv_test=="oui"))%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# Enfants testés`=n)
+
+#Enfants non testes
+enf_non_test<-stat_ptme_index%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & 
+           (hiv_test=="2" | hiv_test=="non") & non_consent_reason == "---")%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# Enfants non testés`=n)
+
+
+#Enfants VIH+ avec ST code
+enf_vih_pos<-stat_ptme_index%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & hiv_test_result=="positif" & 
+           (hiv_test=="1" | hiv_test=="oui"))%>%
+  filter(!full_code_patient_menage %in% c("//","---"))%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()
+
+
+#Enfants VIH+ total
+enf_vih_pos_total<-stat_ptme_index%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & hiv_test_result=="positif" & 
+           (hiv_test=="1" | hiv_test=="oui"))%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# Enfants VIH+`=n)
+
+
+#Enfants VIH-
+enf_vih_neg<-stat_ptme_index%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & hiv_test_result=="negatif" & 
+           (hiv_test=="1" | hiv_test=="oui"))%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# Enfants VIH-`=n)
+
+
+#No information test
+no_info_status<-stat_ptme_index%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & 
+           hiv_test=="1" & !hiv_test_result %in% c("positif","negatif"))%>%
+  select(patient_code)%>%
+  group_by(patient_code)%>%
+  count()%>%
+  ungroup()%>%
+  rename(`# no_info_status`=n)
+
+
+#On commcare
+commcare_ptme_yes<-comm_ptme_mix%>%
+  select(on_commCare)%>%
+  filter(on_commCare=="yes")
+commcare_ptme_no<-comm_ptme_mix%>%
+  select(on_commCare)%>%
+  filter(on_commCare=="no")
+no_accept = left_join(serv_ptme1,accept, by = 'patient_code')%>%
+  filter(is_accepted == '0')
+```
+
+
+## Représentation graphique des fréquences d'enfants testés, VIH-, VIH+, non testés...
+:::card
+***Note***: Nous tenons à souligner que les filles & fils VIH+ avec un code ST sur CommCare sont au nombre de `r sum(enf_vih_pos$n)`.
+:::
+
+:::card
+```{r,echo=FALSE}
+#####TESTING
+#Data processing
+df_ptme_test<-data.frame(variable=c("enfants","testés","VIH-",
+                                    "statuts inconnus","VIH+ total","non testés"), 
+                         freq=c(sum(eff_enf$`# Enfants`),sum(enf_test$`# Enfants testés`),
+                                sum(enf_vih_neg$`# Enfants VIH-`),
+                                sum(no_info_status$`# no_info_status`),
+                                sum(enf_vih_pos_total$`# Enfants VIH+`),
+                                sum(enf_non_test$`# Enfants non testés`)),
+                         type=c("enfants","testing","statut","statut","statut","testing"))
+
+if(nrow(df_ptme_test)==0){
+  print("Il n'y a pas d'activite")
+}else{
+df_ptme_test %>%
+  group_by(type)%>%
+  mutate(proc = (freq/sum(freq) * 100))%>%
+  ggplot(aes(fill=variable,x=reorder(type,-freq), y = freq)) + 
+  geom_bar(stat="identity",color="black",show.legend = T) +
+  scale_fill_brewer(palette = "Dark2", direction = -1) +
+  geom_label(aes(label =paste(paste(format(freq,big.mark = ",")),sep=" ",paste("(",sep="",round(proc,0),"%)")), hjust = 0.5, vjust=0.5),size=3,color="white",show.legend = F,position = position_stack(vjust = 0.5))+
+  ggtitle("") +
+  labs(caption=paste("Data Source: hivhaiti",sep = " / ",Sys.Date())) +
+  theme_bw()+
+  theme(
+    plot.caption = element_text(face="italic"))+
+  xlab("")+
+  ylab("")
+}
+```
+:::
+
+## Liste dynamique des filles & fils non encore testés
+
+```{r,echo=FALSE}
+#Table secondaire de donnees
+
+if(nrow(enf_non_test)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(enf_non_test%>%rename(mother_code = patient_code), extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))
+}
+```
+
+
+## Liste dynamique des filles et fils VIH+ sans code ST sur CommCare
+
+```{r,echo=FALSE}
+#Enfants VIH+
+library(DT)
+pos_vih_ptme<-compt_ptme4%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & hiv_test_result=="positif" & 
+           (hiv_test=="1" | hiv_test=="oui") & full_code_patient_menage %in% c("//","---"))%>%
+  select(patient_code,name,hiv_test,hiv_test_result,full_code_patient_menage,age_in_year)
+
+#vih_pos_ptme_sans_ST
+#vih_pos_ptme_sans_ST = left_join(vih_pos_ptme_sans_ST,lookup_coord_site,by='site_code')
+#pos_vih_ptme
+if(nrow(pos_vih_ptme)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(pos_vih_ptme, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))  
+}
+```
+
+
+## Liste dynamique des filles et fils avec statut inconnu sur Commcare
+
+```{r,echo=FALSE}
+library(DT)
+#join_ptme_inconnu = left_join(join_ptme_inconnu, lookup_coord_site, by = 'site_code')
+inconnu_ptme_com<-compt_ptme4%>%
+  filter(ptme_relationship=="2" & age_in_year %in% c(0:17) & 
+           (hiv_test=="1" | hiv_test=="oui") & !hiv_test_result %in% c("positif","negatif"))%>%
+  select(patient_code,owner_name,first_name,last_name,name,age_in_year,hiv_test)
+
+#join_ptme_inconnu = left_join(join_ptme_inconnu, lookup_coord_site, by = 'site_code')
+
+if(nrow(inconnu_ptme_com)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(inconnu_ptme_com, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))  
+}
+```
+
+
+# STATISTIQUES DES SERVICES AUX FEMMES PTME EN Q3 & EN Q4 FY25
+
+:::card
+## Représentation graphique des statistiques sur les femmes servies en Q3 & Q4 FY25
+```{r, echo=FALSE}
+library(dplyr)
+library(lubridate)
+# IMPORT PTME appel
+ptme_app_0 <- read_excel(paste0(first_part, 'Caris Health Agent - Femme PMTE  - APPELS PTME (created 2025-02-13) ', Sys.Date(), '.xlsx'))
+
+# FOR Q1
+ptme_app_q1 <- ptme_app_0 %>%
+  select(`form.APPELS_PTME.date_appel`, `form.APPELS_PTME.patient_code`, `form.APPELS_PTME.is_ptme_available`) %>%
+  rename(
+    date_appel = `form.APPELS_PTME.date_appel`,
+    patient_code = `form.APPELS_PTME.patient_code`,
+    found = `form.APPELS_PTME.is_ptme_available`
+  ) %>%
+  filter(found == '1') %>%
+  select(patient_code, date_appel, found)
+
+serv_ptme_app3 = left_join(serv_ptme_app1, ptme_app_q1, by = 'patient_code')
+
+serv_ptme_app3 <- serv_ptme_app3 %>%
+  mutate(
+    date_appel = as.Date(date_appel),
+    appel_q1 = if_else(
+      year(date_appel) == year(Sys.Date()) & month(date_appel) %in% 1:3,
+      "yes", "no", missing = "no"
+    ),
+    appel_q2 = if_else(
+      year(date_appel) == year(Sys.Date()) & month(date_appel) %in% 4:6,
+      "yes", "no", missing = "no"
+    )
+  )
+write_xlsx(serv_ptme_app3, path = "serv_ptme_app3.xlsx")
+```
+
+
+```{r,echo=FALSE}
+# Création sous-groupes
+q1yes_q2no <- serv_ptme_app3 %>%
+  filter(
+    appel_q1 == "yes",
+    appel_q2 == "no"
+  )
+
+q1yes_q2yes <- serv_ptme_app3 %>%
+  filter(
+    appel_q1 == "yes",
+    appel_q2 == "yes"
+  )
+
+q1no_q2yes <- serv_ptme_app3 %>%
+  filter(
+    appel_q1 == "no",
+    appel_q2 == "yes"
+  )
+
+# Graphe
+ptme_services <- data.frame(
+  var = c("services_q2yes_q3no", "services_q2yes_q3yes", "services_q2no_q3yes"),
+  freq = c(nrow(q1yes_q2no), nrow(q1yes_q2yes), nrow(q1no_q2yes))
+)
+
+if(nrow(ptme_services) == 0){
+  print("Il n'y a pas d'activité")
+} else {
+  ggplot(ptme_services, aes(y = freq, x = reorder(var, freq))) +
+    geom_bar(fill = "#00AFBB", stat = "identity", color = "black") +
+    geom_label(aes(label = freq), size = 3.3) +
+    coord_flip() +
+    theme_bw() +
+    labs(
+      caption = paste("Data source: hivhaiti", Sys.Date()),
+      x = "", y = "Fréquence"
+    ) +
+    theme(
+      plot.caption = element_text(face = "italic", size = 8),
+      axis.text.x = element_text(size = 10, family = "Cambria"),
+      axis.title.y = element_text(size = 10, family = "Cambria"),
+      strip.text = element_text(size = 10)
+    )
+}
+```
+:::
+
+
+## Liste dynamique des femmes PTME ayant bénéficié d'au moins un (1) service en Q3 mais aucun en Q4 FY25 (jusqu'ici)
+
+```{r,echo=FALSE}
+#Table services q2=yes & q3=no
+if(nrow(q1yes_q2no)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(q1yes_q2no, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))
+}
+```
+
+
+# ACTIVITE DANS LES CLUBS DURANT LA SEMAINE ALLANT DU `r prev` AU `r after`
+
+N.B: On exclut les cas d'abandon, de mort et de graduation.
+
+```{r club_activity1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+library(DBI)
+library(RMySQL)
+library(lubridate)
+library(dplyr)
+library(writexl)
+library(glue)
+
+# Fixer les dates
+start_date_club <- as.Date("2025-01-01")
+end_date_club <- Sys.Date()
+
+# Connexion
+con <- dbConnect(
+  MySQL(), 
+  user = 'caris_readonly', 
+  password = 'longlivecaris!!', 
+  dbname = 'caris_db', 
+  host = 'caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'
+)
+
+# Construction de la requête avec glue
+sql_query <- glue("
+SELECT
+    IF(p.linked_to_id_patient > 0, p.linked_to_id_patient, p.id) AS id_patient,
+    lh.name AS hopital,
+    CONCAT(lh.city_code, '/', lh.hospital_code) AS site_code,
+    c.name AS club_name,
+    lct.name AS club_type,
+    p.patient_code,
+    cs.date AS `session_date(presence)`,
+    lctc.name_fr AS topic,
+    a.date AS first_attendance_date,
+    b.date AS last_attendance_date,
+    aa.date AS first_attendance_date_by_club,
+    COALESCE(ti.first_name, tm.first_name) AS first_name,
+    COALESCE(ti.last_name, tm.last_name) AS last_name,
+    COALESCE(ti.dob, tm.dob) AS dob,
+    COALESCE(ti.is_abandoned, tm.is_abandoned) AS is_abandoned,
+    COALESCE(ti.is_dead, tm.is_dead) AS is_dead,
+    IF(tm.is_graduate=1, 'Yes', 'Non') AS graduation,
+    tm.graduation_date,
+    CASE ti.gender
+        WHEN 1 THEN 'male'
+        WHEN 2 THEN 'female'
+        WHEN 3 THEN 'unknown'
+        ELSE ti.gender END AS sex,
+    ss.clore,
+    ss.nbre_deparasitaires,
+    ss.nbre_preservatifs,
+    ss.nbre_vit_a,
+    ss.nbre_moustiquaires,
+    ss.code,
+    ss.is_patient_tb,
+    is_patient_on_pf,
+    adh,
+    ss.is_present AS present,
+    lca.name AS raison_absence
+FROM session ss
+LEFT JOIN club_session cs ON cs.id = ss.id_club_session
+LEFT JOIN club c ON c.id = cs.id_club
+LEFT JOIN lookup_club_type lct ON lct.id = c.club_type
+LEFT JOIN lookup_club_topic lctc ON lctc.id = cs.topic
+LEFT JOIN patient p ON p.id = ss.id_patient
+LEFT JOIN tracking_motherbasicinfo tm ON tm.id_patient = IF(p.linked_to_id_patient > 0, p.linked_to_id_patient, ss.id_patient)
+LEFT JOIN tracking_infant ti ON ti.id_patient = IF(p.linked_to_id_patient > 0, p.linked_to_id_patient, ss.id_patient)
+LEFT JOIN lookup_hospital lh ON lh.id = c.id_hospital
+LEFT JOIN (
+    SELECT MIN(cs1.date) AS date, s1.id_patient, main_id
+    FROM session s1
+    LEFT JOIN club_session cs1 ON cs1.id = s1.id_club_session
+    LEFT JOIN (SELECT p12.*, IF(p12.linked_to_id_patient > 0, p12.linked_to_id_patient, p12.id) AS main_id FROM patient p12) pp ON pp.id = s1.id_patient
+    WHERE s1.is_present IS NOT NULL
+    GROUP BY pp.main_id
+) a ON a.main_id = IF(p.linked_to_id_patient > 0, p.linked_to_id_patient, p.id)
+LEFT JOIN (
+    SELECT MAX(cs2.date) AS date, s2.id_patient
+    FROM session s2
+    LEFT JOIN club_session cs2 ON cs2.id = s2.id_club_session
+    WHERE s2.is_present IS NOT NULL
+    GROUP BY s2.id_patient
+) b ON b.id_patient = ss.id_patient
+LEFT JOIN (
+    SELECT MIN(cs3.date) AS date, s3.id_patient, cs3.id_club
+    FROM session s3
+    LEFT JOIN club_session cs3 ON cs3.id = s3.id_club_session
+    WHERE s3.is_present IS NOT NULL
+    GROUP BY cs3.id_club, s3.id_patient
+) aa ON aa.id_patient = ss.id_patient AND c.id = aa.id_club
+LEFT JOIN lookup_club_attendance lca ON lca.id = ss.is_present
+WHERE
+    ss.is_present IS NOT NULL AND
+    p.id IS NOT NULL AND
+    cs.date BETWEEN '{start_date_club}' AND '{end_date_club}'
+ORDER BY CONCAT(lh.city_code, '/', lh.hospital_code), c.name, p.patient_code, cs.date
+LIMIT 100000000
+")
+
+# Exécuter la requête
+sess_club <- dbSendQuery(con, sql_query)
+club_s_ptme <- fetch(sess_club, n = -1)
+
+# Export optionnel
+writexl::write_xlsx(club_s_ptme, "club_s_ptme.xlsx")
+
+# Fermer la connexion
+#dbClearResult(sess_club)
+#dbDisconnect(con)
+```
+
+
+```{r,echo=FALSE}
+# Data processing
+club_s_ptme$is_abandoned[is.na(club_s_ptme$is_abandoned)] <- 0
+club_s_ptme$is_dead[is.na(club_s_ptme$is_dead)] <- 0
+club_s_ptme$raison_absence[is.na(club_s_ptme$raison_absence)] <- "blank"
+club_s_ptme$graduation[is.na(club_s_ptme$graduation) | club_s_ptme$graduation == ""] <- "Non"
+club_s_ptme$graduation_date[is.na(club_s_ptme$graduation_date)] <- as.Date(NA)
+
+# Sélection des colonnes et filtrage
+club_df_ptme <- club_s_ptme %>%
+  select(
+    patient_code, hopital, dob, sex, club_name, club_type,
+    `session_date(presence)`, last_attendance_date,
+    is_abandoned, is_dead, graduation, graduation_date, present, raison_absence
+  ) %>%
+  filter(
+    graduation == "Non",
+    club_type == "Club Mere",
+    is_abandoned != 1,
+    is_dead != 1,
+    `session_date(presence)` >= prev,
+    `session_date(presence)` <= after
+  )
+
+# Export
+writexl::write_xlsx(club_df_ptme, "club_df_ptme.xlsx")
+
+```
+
+```{r, echo=FALSE}
+# Sélection des colonnes et filtrage
+club_date_prev <- as.Date("2025-01-01")
+club_date_after <- Sys.Date()  # date du jour
+
+club_trim <- club_s_ptme %>%
+  select(
+    patient_code, hopital, dob, sex, club_name, club_type,
+    `session_date(presence)`, last_attendance_date,
+    is_abandoned, is_dead, graduation, graduation_date, present, raison_absence
+  ) %>%
+  filter(
+    graduation == "Non",
+    club_type == "Club Mere",
+    is_abandoned != 1,
+    is_dead != 1,
+    as.Date(`session_date(presence)`) >= club_date_prev,
+    as.Date(`session_date(presence)`) <= club_date_after
+  )
+club_trim <- club_trim %>%
+  mutate(
+    session_date_presence = as.Date(`session_date(presence)`),
+
+    club_q1 = if_else(
+      year(session_date_presence) == year(Sys.Date()) & month(session_date_presence) %in% 1:3,
+      "yes", "no", missing = "no"
+    ),
+    club_q2 = if_else(
+      year(session_date_presence) == year(Sys.Date()) & month(session_date_presence) %in% 4:6,
+      "yes", "no", missing = "no"
+    ),
+    club_q3 = if_else(
+      year(session_date_presence) == year(Sys.Date()) & month(session_date_presence) %in% 7:9,
+      "yes", "no", missing = "no"
+    ),
+    club_q4 = if_else(
+      year(session_date_presence) == year(Sys.Date()) & month(session_date_presence) %in% 10:12,
+      "yes", "no", missing = "no"
+    )
+  ) %>%
+  select(-session_date_presence)  # Optionnel
+```
+
+# STATISTIQUES DE PARTICIPATION DES FEMMES PTME EN CLUB EN Q3 & EN Q4 FY25
+
+:::card
+## Représentation graphique des statistiques de participation en club en Q3 & Q4 FY25
+```{r,echo=FALSE}
+#writexl::write_xlsx(serv_ptme,'serv_ptme.xlsx')
+club_trim <- club_trim %>% inner_join(ptme_enceinte %>% select(patient_code), by = "patient_code")
+cq1y_cq2n<-club_trim %>%
+  distinct(patient_code, .keep_all = TRUE)%>%
+  filter(club_q1=="yes" & club_q2=="no" & is_dead==0 & is_abandoned == '0')
+
+#club_q4=yes & club_q1=yes
+cq1y_cq2y<-club_trim%>%
+  distinct(patient_code, .keep_all = TRUE)%>%
+  filter(club_q1=="yes" & club_q2=="yes")
+
+
+#club_q4=no & club_q1=yes
+cq1n_cq2y<-club_trim%>%
+  distinct(patient_code, .keep_all = TRUE)%>%
+  filter(club_q1=="no" & club_q2=="yes" & is_dead==0 & is_abandoned == '0')
+
+#club_q4=no & club_q1=yes
+cq1n_cq2n<-club_trim%>%
+  distinct(patient_code, .keep_all = TRUE)%>%
+  filter(club_q1=="no" & club_q2=="no" & is_dead==0 & is_abandoned == '0')
+
+#Graphe club
+df_ptme_club<-data.frame(var=c("club_q2yes_q3no","club_q2yes_q3yes","club_q2no_q3yes", "club_q2no_q3no"),freq=c(length(cq1y_cq2n$patient_code),length(cq1y_cq2y$patient_code),length(cq1n_cq2y$patient_code),length(cq1n_cq2n$patient_code)))
+
+if(nrow(df_ptme_club)==0){
+  print("Il n'y a pas d'activite")
+}else{
+df_ptme_club %>%
+    ggplot(aes(y=freq, x=reorder(var,freq)))+ 
+    geom_bar(fill="#00AFBB",stat="identity",color="black",show.legend = F) +
+    geom_label(aes(label =freq, hjust = 0.5),size=3.3,show.legend = F)+
+    coord_flip()+
+    theme_bw()+
+    labs(caption=paste("Data source: hivhaiti",sep = " / ", Sys.Date()))+
+    theme(
+      plot.caption = element_text(face="italic",size = 8),
+      axis.text.x = element_text(size = 10,family="Cambria"),
+      axis.title.y = element_text(size = 10,family = "Cambria"),
+      strip.text = element_text(size = 10))+
+    #theme(axis.text.x = element_text(angle = 25, face="bold",size = 9, vjust = 0.95, hjust=1))+
+    xlab("")+
+    ylab("Fréquence")
+}
+```
+:::
+
+
+## Liste dynamique des femmes PTME ayant eu au moins une (1) participation en club en Q3 mais aucune en Q4 FY25 (jusqu'ici)
+
+```{r,echo=FALSE}
+info <- read_excel(
+  "site_info.xlsx",
+  sheet = 1,  # En R, l’index commence à 1 et non 0
+  col_types = "text"  # pour éviter la détection automatique incorrecte
+) %>%
+  select(office, site, coordonnatrices, nom_complet_agent, username_agent)
+join_cq1y_cq2n <- cq1y_cq2n
+join_cq1y_cq2n <- join_cq1y_cq2n %>% mutate(site = substr(patient_code,0,8))
+join_cq1y_cq2n <- left_join(join_cq1y_cq2n,info,by='site')
+
+#join_cq1y_cq2n$network[is.na(join_cq1y_cq2n$network)]<-"---"
+#join_cq1y_cq2n$network[join_cq1y_cq2n$network=="NULL"]<-"---"
+
+```
+
+```{r,echo=FALSE}
+
+#Table de donnees
+if(nrow(join_cq1y_cq2n)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(join_cq1y_cq2n, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))
+}
+```
+
+## Liste dynamique des femmes PTME aucune participation ni en club Q3 ni aucune en Q4 FY25 (jusqu'ici)
+```{r,echo=FALSE}
+join_cq1n_cq2n <- cq1n_cq2n
+join_cq1n_cq2n <- join_cq1n_cq2n %>% mutate(site = substr(patient_code,0,8))
+join_cq1n_cq2n <- left_join(join_cq1n_cq2n,info,by='site')
+
+```
+
+```{r,echo=FALSE}
+
+#Table de donnees
+if(nrow(join_cq1n_cq2n)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(join_cq1n_cq2n, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))
+}
+```
+
+## Représentation graphique des présences en club durant la semaine écoulée (du `r prev` au `r after`)
+
+```{r,echo=FALSE}
+#Graphe absence & presence
+graf_abs_pres_ptme<-club_df_ptme%>%
+  select(present)%>%
+  group_by(present)%>%
+  count()
+
+graf_abs_pres_ptme$present<-ifelse(graf_abs_pres_ptme$present=='1','présence','absence')
+
+graf_abs_pres_ptme<-graf_abs_pres_ptme%>%
+  group_by(present)%>%
+  summarise(freq=sum(n))%>%
+  ungroup()
+
+graf_abs_pres_ptme = as.data.frame(graf_abs_pres_ptme)
+
+pres_ptme<-graf_abs_pres_ptme%>%
+  filter(present == "présence")
+
+abs_ptme<-graf_abs_pres_ptme%>%
+  filter(present == "absence")
+writexl::write_xlsx(graf_abs_pres_ptme, "graf_abs_pres_ptme.xlsx")
+```
+:::card
+Durant cette période, sur `r sum(graf_abs_pres_ptme$freq)` Femme(s) PTME attendues en club, `r pres_ptme$freq` était(aient) présente(s) contre `r abs_ptme$freq` qui était(aient) absente(s).
+:::
+
+:::card
+```{r,echo=FALSE}
+colors <- c('rgb(204,204,204)', "#490B65")
+
+if(nrow(graf_abs_pres_ptme)==0){
+  print("Il n'y a pas d'activite")
+}else{
+fig <- plot_ly(graf_abs_pres_ptme, labels = ~present, values = ~freq, marker = list(colors = colors, line = list(color = 'white', width = 1)), type = 'pie',textinfo='value+percent',
+               insidetextorientation='radial')
+fig 
+}
+```
+:::
+
+:::card
+## Représentation graphique des raisons d'absence en club durant la période écoulée (du `r prev` au `r after`)
+
+```{r,echo=FALSE}
+# Graphe raison absence
+graf_clb_ptme <- club_df_ptme %>%
+  filter(raison_absence != '1- Present') %>%
+  group_by(club_type, raison_absence) %>%
+  count(name = "freq")  # nomme la colonne 'freq'
+
+# Nettoyage des libellés : retire les numéros et la ponctuation
+graf_clb_ptme$raison_absence <- sub("\\d+", "", graf_clb_ptme$raison_absence)
+graf_clb_ptme$raison_absence <- sub("[[:punct:]]+", "", graf_clb_ptme$raison_absence)
+graf_clb_ptme$raison_absence <- trimws(graf_clb_ptme$raison_absence)
+
+if (nrow(graf_clb_ptme) == 0) {
+  print("Il n'y a pas d'activité")
+} else {
+  graf_clb_ptme %>%
+    ggplot(aes(y = freq, x = reorder(raison_absence, freq), fill = raison_absence)) + 
+    geom_bar(stat = "identity", color = "black", show.legend = FALSE) +
+    scale_fill_viridis_d(option = "D") +
+    geom_label(
+      aes(label = freq),
+      fill = "white",
+      color = "black",
+      size = 4,
+      show.legend = FALSE
+    ) +
+    coord_flip() +
+    theme_bw() +
+    theme(
+      panel.grid = element_blank(),
+      plot.caption = element_text(face = "italic", size = 8)
+    ) +
+    labs(caption = paste("Data source: hivhaiti", "/", Sys.Date())) +
+    xlab("") +
+    ylab("")
+}
+
+```
+:::
+
+
+```{r, echo=FALSE}
+# Lire le fichier Excel
+#df <- read_excel("club_df_ptme.xlsx", sheet = "Sheet1")
+
+# Appliquer le filtre selon les conditions demandées
+df_clubs_uniques <- club_df_ptme %>%
+  filter(
+    present == 1,
+    graduation == "Non",
+    is_abandoned != 1,
+    is_dead != 1,
+    as.Date(`session_date(presence)`) >= prev,
+    as.Date(`session_date(presence)`) <= after
+  ) %>%
+  distinct(club_name, .keep_all = TRUE) # garder les colonnes uniques avec les autres colonnes
+
+# Nombre de clubs uniques
+nb_clubs_uniques <- nrow(df_clubs_uniques)
+
+# Créer un dataframe des jours de fonctionnement uniques
+df_jours_uniques <- club_df_ptme %>%
+  filter(
+    present == 1,
+    graduation == "Non",
+    is_abandoned != 1,
+    is_dead != 1,
+    as.Date(`session_date(presence)`) >= prev,
+    as.Date(`session_date(presence)`) <= after
+  ) %>%
+  distinct(`session_date(presence)`)
+
+# Nombre de jours de fonctionnement uniques
+nb_jours_uniques <- nrow(df_jours_uniques)
+
+# Afficher les résultats
+#print(paste("Nombre de clubs uniques :", nb_clubs_uniques))
+#print(paste("Nombre de jours de fonctionnement uniques :", nb_jours_uniques))
+
+# Optionnel : écrire les dataframes dans des fichiers Excel
+writexl::write_xlsx(df_clubs_uniques, "clubs_uniques.xlsx")
+writexl::write_xlsx(df_jours_uniques, "jours_uniques.xlsx")
+```
+
+
+:::card
+***Note*** : Durant cette semaine, il y a eu `r nrow(df_jours_uniques)` jour(s) de fonctionnement des clubs, pendant lesquels `r nrow(df_clubs_uniques)` club(s) ont pu être réalisés.
+:::
+
+# ACTIVITE DANS LES CLUBS EN Q4 FY25
+
+:::card
+## Représentation graphique de l'effectif total des femmes PTME attendues en club en Q4 FY25  versus celles qui y ont effectivement participé
+
+```{r, echo=FALSE}
+library(lubridate)
+
+# Date de fin = aujourd'hui
+end_date <- Sys.Date()
+
+# Soustraire 2 mois
+rough_start <- end_date %m-% months(2)
+
+# Obtenir le premier jour du mois de cette date
+start_date <- floor_date(rough_start, unit = "month")
+
+# Affichage
+#start_date
+#end_date
+
+
+clb_ptme_df <- club_s_ptme %>%
+  select(
+    patient_code, hopital, dob, sex, club_name, club_type,
+    `session_date(presence)`, last_attendance_date, 
+    is_abandoned, is_dead, graduation, raison_absence
+  ) %>%
+  filter(
+    `session_date(presence)` >= start_date & `session_date(presence)` <= end_date,
+    club_type == 'Club Mere',
+    is_abandoned != 1,
+    is_dead != 1,
+    graduation == 'Non'
+  ) %>%
+  mutate(
+    mois = paste(lubridate::month(`session_date(presence)`, label = TRUE, abbr = FALSE),
+                 year(`session_date(presence)`)),
+    site_code = substr(patient_code, 0, 8)
+  )
+
+if (nrow(clb_ptme_df) == 0) {
+  print("Il n'y a pas d'activité")
+} else {
+  total_ptme <- length(unique(clb_ptme_df$patient_code))
+
+  part_ptme <- clb_ptme_df %>%
+    filter(raison_absence == '1- Present') %>%
+    distinct(patient_code) %>%
+    nrow()
+
+  df_clb_ptme <- data.frame(
+    var = c("Effectif", "Participation"),
+    freq = c(total_ptme, part_ptme)
+  )
+
+  df_clb_ptme %>%
+    ggplot(aes(y = freq, x = reorder(var, freq), fill = var)) + 
+    geom_bar(stat = "identity", color = "black", show.legend = FALSE) +
+    scale_fill_viridis_d(option = "D") +
+    geom_label(
+      aes(label = freq),
+      fill = "white",
+      color = "black",
+      size = 4,
+      show.legend = FALSE
+    ) +
+    coord_flip() +
+    theme_bw() +
+    theme(
+      panel.grid = element_blank(),
+      plot.caption = element_text(face = "italic", size = 8)
+    ) +
+    labs(caption = paste("Data source: hivhaiti", "/", Sys.Date())) +
+    xlab("") +
+    ylab("")
+}
+
+
+```
+:::
+
+:::card
+## Représentation graphique des participations mensuelles au club mère
+
+```{r presence mensuelle, echo=FALSE}
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+
+# Charger les données depuis le fichier Excel
+#club_s_ptme <- read_excel("club_s_ptme_club.xlsx")
+
+# Définir la date de fin comme aujourd'hui
+end_date <- Sys.Date()
+start_date <- floor_date(end_date %m-% months(2), unit = "month")
+clb_ptme_df <- club_s_ptme %>%
+  select(
+    patient_code, hopital, dob, sex, club_name, club_type,
+    `session_date(presence)`, last_attendance_date, 
+    is_abandoned, is_dead, graduation, raison_absence
+  )
+# Nettoyer et filtrer les données
+clb_ptme_df <- clb_ptme_df %>%
+  mutate(`session_date(presence)` = as.Date(`session_date(presence)`)) %>%
+  filter(
+    between(`session_date(presence)`, start_date, end_date),
+    club_type == "Club Mere",
+    is_abandoned != 1,
+    is_dead != 1,
+    graduation == "Non"
+  ) %>%
+  mutate(
+    mois_date = floor_date(`session_date(presence)`, "month"),
+    mois = format(mois_date, "%B %Y")  # Format long
+  )
+
+if(nrow(clb_ptme_df) == 0){
+  cat("### Il n'y a pas d'activité durant cette période.\n")
+} else {
+  presence_par_mois <- clb_ptme_df %>%
+    filter(raison_absence == "1- Present") %>%
+    count(mois, mois_date) %>%
+    arrange(mois_date)
+
+  ggplot(presence_par_mois, aes(x = mois, y = n)) +
+    geom_col(fill = "#00AFBB", color = "black") +
+    geom_text(aes(label = n), vjust = -0.5, size = 3.5) +
+    labs(
+      title = "Présence au Club Mère par mois",
+      x = "Mois",
+      y = "Nombre de présences",
+      caption = paste("Source : hivhaiti /", Sys.Date())
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      panel.grid.major.x = element_blank(),
+      plot.caption = element_text(face = "italic", size = 8)
+    )
+}
+
+```
+:::
+
+:::card
+## Représentation graphique des raisons d'absence en club en Q4 FY25 
+```{r, fig.height=8, eval=TRUE, echo=FALSE}
+# S'assurer que "mois" est formaté en texte "July 2025"
+graf_clb_month_ptme <- clb_ptme_df %>%
+  filter(raison_absence != "1- Present") %>%
+  mutate(
+    mois_date = floor_date(`session_date(presence)`, "month"),
+    mois = format(mois_date, "%B %Y")
+  ) %>%
+  group_by(raison_absence, mois) %>%
+  count()
+
+graf_clb_month_ptme$raison_absence <- sub("^\\d+\\s*-\\s*", "", graf_clb_month_ptme$raison_absence)
+graf_clb_month_ptme$raison_absence <- trimws(graf_clb_month_ptme$raison_absence)
+
+if(nrow(graf_clb_month_ptme) == 0){
+  print("Il n'y a pas d'activité")
+} else {
+  graf_clb_month_ptme %>%
+    ggplot(aes(fill = raison_absence, y = n, x = reorder(raison_absence, n))) + 
+    geom_bar(stat = "identity", color = "black", show.legend = FALSE) +
+    geom_label(fill = "white", aes(label = n), color = "black", size = 3, show.legend = FALSE) +
+    scale_fill_viridis(discrete = TRUE, option = "D", direction = -1) +
+    coord_flip() +
+    facet_wrap(~mois, ncol = 1, scales = 'free_y') +
+    labs(
+      caption = paste("Data source: hivhaiti", Sys.Date(), sep = " / ")
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(color = "black", size = 13, family = "Cambria", face = "bold", hjust = 0.5, vjust = 0.8),
+      plot.caption = element_text(face = "italic", size = 10),
+      axis.text.x = element_text(size = 12, family = "Cambria"),
+      axis.title.y = element_text(size = 12, family = "Cambria"),
+      strip.text = element_text(size = 12)
+    ) +
+    xlab("") +
+    ylab("")
+}
+```
+:::
+
+## Tableau des données décrivant les activités dans les clubs en Q4 FY25 
+
+```{r,echo=FALSE}
+if(nrow(clb_ptme_df)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(clb_ptme_df, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))  
+}
+```
+
+
+:::card
+## Représentation graphique du nombre de nouveaux clubs de mère créés par bureau et par trimestre
+
+```{r new created club, echo=FALSE}
+
+start_date_club = '2025-01-01'
+end_date_club = '2025-07-30'
+
+
+cr_club_sql<-dbSendQuery(
+    dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+    
+gsubfn::fn$identity("SELECT 
+    CONCAT(lh.city_code, '/', lh.hospital_code) AS site,
+    c.name AS club_name,
+    lct.name AS club_type,
+    c.start_date,
+    x.last_session_date,
+	case 
+		when month(c.start_date) between 10 and 12 then 'Q1'
+		when month(c.start_date) between 1 and 3 then 'Q2'
+		when month(c.start_date) between 4 and 6 then 'Q3'
+		when month(c.start_date) between 7 and 9 then 'Q4'
+	End as Quarter
+FROM
+    caris_db.club c
+        LEFT JOIN
+    caris_db.lookup_hospital lh ON lh.id = c.id_hospital
+        LEFT JOIN
+    caris_db.lookup_club_type lct ON lct.id = c.club_type
+        LEFT JOIN
+    (SELECT 
+        cs.id_club, MAX(cs.date) AS last_session_date
+    FROM
+        club_session cs
+    GROUP BY cs.id_club) x ON x.id_club = c.id
+	WHERE c.start_date BETWEEN '`start_date_club`' AND '`end_date_club`'"))
+
+
+#Fetch the data
+cr_club=fetch(cr_club_sql,n=-1)
+cr_club <- read_excel("cr_club.xlsx")
+```
+
+
+
+```{r, fig.height=5, echo=FALSE}
+cr_club <- cr_club%>%
+  select(site, club_name, club_type, start_date, last_session_date, Quarter) %>%
+  filter(club_type == 'Club Mere')
+# Charger les données depuis le fichier Excel
+info <- read_excel(
+  "site_info.xlsx",
+  sheet = 1,  # En R, l’index commence à 1 et non 0
+  col_types = "text"  # pour éviter la détection automatique incorrecte
+) %>%
+  select(office, site, coordonnatrices, nom_complet_agent, username_agent)
+
+# Joindre les deux dataframes sur la colonne 'site'
+cr_club <- left_join(cr_club, info, by = "site")
+
+cr_club$office[is.na(cr_club$office)] <- "Autres"
+
+
+
+office<-cr_club%>%
+  select(office, Quarter)%>%
+	group_by(office, Quarter) %>%
+  count() %>%
+  ungroup()
+
+office %>%
+	group_by(office)%>%
+	mutate(prop=n/sum(n))%>%
+	ggplot(aes(fill=Quarter, y=n, x=reorder(office,n)))+
+	geom_bar(position="dodge", stat="identity",color="black") +
+	geom_text(aes(label = n), fill="white",vjust=0.5,hjust=-0.3,
+				position = position_dodge(width = 0.9),size=3.3)+
+	scale_fill_brewer(palette = 'Dark2') +
+	coord_flip(y = c(0,max(office$n)+0.1*max(office$n)))+
+	ggtitle("") +
+	labs(caption=paste("Data Source: hivhaiti",sep = " / ",Sys.Date())) +
+	theme_bw()+
+	theme(
+		plot.title = element_text(color = "black", size = 14, family="Cambria",face = "bold",hjust = 0.5),
+		plot.caption = element_text(face="italic",size=10),
+		axis.text.x = element_text(size = 12,family="Cambria"),
+		axis.title.y = element_text(size = 12,family = "Cambria"),
+		strip.text = element_text(size = 12,family="Cambria"))+
+	xlab("")+
+	ylab("")
+
+```
+:::
+
+
+## Liste des nouveaux clubs mère en Q1, Q2, Q3 et Q4
+
+```{r,echo=FALSE}
+if(nrow(cr_club)==0){
+  print("Il n'y a pas d'activite")
+}else{
+#Table
+datatable(cr_club, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 5))  
+}
+```
+
+
+:::card
+## Figure représentative des néophytes intégrées en club en Q4 FY25
+
+```{r, eval= TRUE, echo=FALSE}
+#Data processing
+club_new_df<-data_infos_club%>%
+  select(patient_code,site_code,hopital,dob,office,club_name,club_type,
+         first_attendance_date,last_attendance_date,
+         is_abandoned,is_dead, graduation,graduation_date)%>%
+  filter((first_attendance_date>='2025-01-01' & first_attendance_date<='2025-07-10') & club_type=='Club Mere' & is_abandoned!=1 & is_dead!=1)%>%
+  distinct(patient_code,.keep_all=TRUE)
+
+club_new_df=left_join(club_new_df,tel,by='patient_code')
+#club_new_df=left_join(club_new_df,lookup_net, by='site_code')
+```
+
+
+
+
+```{r, eval=TRUE, echo=FALSE}
+if(nrow(club_new_df)==0){
+  print("Il n'y a pas d'activite")
+}else{
+club_new_df%>%
+  group_by(office)%>%
+  count()%>%
+ggplot(aes(y=n, x=reorder(office,n)))+ 
+  geom_bar(fill='#0099a1',stat="identity",color="black",show.legend = F) +
+  geom_label(aes(label =n, hjust = 0.5),size=2.7,show.legend = F)+
+  coord_flip()+
+  theme_bw()+
+  labs(caption=paste("Data source: hivhaiti",sep = " / ", Sys.Date()))+
+  theme(
+    plot.caption = element_text(face="italic",size = 8))+
+  xlab("")+
+  ylab("néophytes intégrées en club")
+}
+```
+:::
+
+
+## Liste des néophytes intégrées en club en Q4 FY25
+
+```{r,echo=FALSE}
+if(nrow(club_new_df)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(club_new_df, filter = 'bottom', extensions = 'Buttons',
+          options = list(dom = 'Bfrtip',width="120px",
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#0B1E2A', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),pageLength = 4))
+}
+```
+
+# STATISTIQUES RELATIVES AUX PCR NON LIES EN FY25
+
+```{r PCR non lies,echo=FALSE, message=FALSE, warning=FALSE}
+#Reported by quarter
+start_date_eid = '2025-01-01'
+end_date_eid = '2025-07-10'
+
+eid_data=dbSendQuery(
+    dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+ gsubfn::fn$identity("
+select Patient_code,Code_mere,if(Code_mere in (select patient_code from patient),'yes','no') as Liaison_mere,left(patient_code,8) as Site_or_lab_code, hospital,Office, if(Network is not null,Network,'Autres') as Network, date_of_birth, gender, start_date as arv_start, lab, date_blood_taken, date_caris_received_sample, date_lab_received_sample, Result,
+if(timestampdiff(day,date_of_birth,date_blood_taken)<=61,if(timestampdiff(day,date_of_birth,date_blood_taken)>=0,'0_2',''),if(timestampdiff(day,date_of_birth,date_blood_taken)<=365,if(timestampdiff(day,date_of_birth,date_blood_taken)>61,'2_12',''),'')) as tranche_age
+,if(arv is not null,'yes','') as on_arv, timestampdiff(day,date_lab_received_sample,now()) as total_jours_Labo, timestampdiff(day,date_blood_taken,pcr_result_date) as from_specimen_to_result, timestampdiff(day,date_blood_taken,date_caris_received_sample) as from_specimen_to_caris,
+timestampdiff(day,date_caris_received_sample,date_lab_received_sample) as from_caris_to_lab, timestampdiff(day,date_lab_received_sample,pcr_result_date) as from_lab_to_result,
+
+if(!(pcr_result_date is null or pcr_result_date ='0000-00-00') and !(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'),timestampdiff(day,date_lab_received_sample,pcr_result_date) , IF(!(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'), timestampdiff(day,date_lab_received_sample,now()),'not_in_lab')) as days_in_lab,
+case 
+when if(!(pcr_result_date is null or pcr_result_date ='0000-00-00') and !(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'),timestampdiff(day,date_lab_received_sample,pcr_result_date) , IF(!(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'), timestampdiff(day,date_lab_received_sample,now()),'not_in_lab'))>15 then 'Ndays_Labo_more_than_15'
+when if(!(pcr_result_date is null or pcr_result_date ='0000-00-00') and !(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'),timestampdiff(day,date_lab_received_sample,pcr_result_date) , IF(!(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'), timestampdiff(day,date_lab_received_sample,now()),'not_in_lab'))<=15 then 'Ndays_Labo_equal_or_less_than_15'
+else'not in lab' end as Nbres_jours_Labo
+
+, 
+#timestampdiff(day,date_caris_received_sample,now()) as Total_jours_Caris,
+
+if(!(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'),timestampdiff(day,date_caris_received_sample,date_lab_received_sample),timestampdiff(day,date_caris_received_sample,now())) as days_between_caris_lab,
+case 
+when if(!(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00') ,timestampdiff(day,date_caris_received_sample,date_lab_received_sample),timestampdiff(day,date_caris_received_sample,now())) >5 then 'Ndays_Caris_more_than_5'
+when if(!(date_lab_received_sample is null or date_lab_received_sample ='0000-00-00'),timestampdiff(day,date_caris_received_sample,date_lab_received_sample),timestampdiff(day,date_caris_received_sample,now())) <=5 then 'Ndays_Caris_equal_or_less_than_5'
+end as Nbres_jours_Caris,
+
+if(pcr_result=1,if(patient_info is not null,if(is_abandoned=0 and is_dead=0,'no','yes'),''),'') as pos_dead_abandon
+,death_date
+,abandoned_date
+,pcr_result_date,
+case 
+when month(date_blood_taken) between 10 and 12 then 'Q1'
+when month(date_blood_taken) between 1 and 3 then 'Q2'
+when month(date_blood_taken) between 4 and 6 then 'Q3'
+when month(date_blood_taken) between 7 and 9 then 'Q4'
+End as Quarter,  -- month(date_blood_taken)  as month_blood_taken,
+#year(date_blood_taken) as year_test,
+if( month(date_blood_taken) between 10 and 12 ,year(date_blood_taken)+1,year(date_blood_taken) ) as Year
+from(
+  select patient_code,tme.id_patient as id_in_mere ,concat(tme.mother_city_code,'/',tme.mother_hospital_code,'/',tme.mother_code) as Code_mere, date_of_birth, tracking_infant.id_patient as patient_info, date_blood_taken, pcr_result,arv.id_patient as arv, is_dead, is_abandoned, death_date, abandoned_date, pcr_result_date, date_caris_received_sample, date_lab_received_sample,
+  lookup_testing_specimen_result.name as _result, if(lookup_testing_specimen_result.name='', 'En cours',lookup_testing_specimen_result.name) as Result,lookup_hospital.name as hospital,lookup_network.name as Network,lookup_hospital.office as Office, lookup_testing_gender.name as gender, tracking_regime.start_date, lookup_lab.name as lab from(
+    select * from testing_specimen t1 where timestampdiff(day,date_of_birth,date_blood_taken)<=365 and date_blood_taken between '`start_date_eid`' and '`end_date_eid`'
+    and date_blood_taken=(select min(date_blood_taken) from testing_specimen t2 where t1.id_patient=t2.id_patient)
+  )test_1
+  left join patient pa on pa.id=test_1.id_patient
+  left join testing_mereenfant tme on pa.id= tme.id_patient
+  left join
+  (select * from(
+    select id_patient from tracking_followup where on_arv=1
+    union
+    select id_patient from tracking_regime where category='regime_infant_treatment'
+  )o
+  )arv on arv.id_patient=test_1.id_patient
+  left join tracking_infant on tracking_infant.id_patient=test_1.id_patient
+  left join lookup_testing_specimen_result on pcr_result=lookup_testing_specimen_result.id
+  left join lookup_hospital on concat(lookup_hospital.city_code,'/',lookup_hospital.hospital_code)=left(patient_code,8)
+  left join tracking_regime on tracking_regime.id_patient=test_1.id_patient
+  left join lookup_testing_gender on lookup_testing_gender.id=gender
+  left join lookup_lab on lookup_hospital.id_lab=lookup_lab.id
+  left join lookup_network on lookup_hospital.network=lookup_network.id
+  where timestampdiff(day,test_1.date_of_birth,test_1.date_blood_taken)<=365 and test_1.date_blood_taken between '`start_date_eid`' and '`end_date_eid`' and linked_to_id_patient=0
+  group by test_1.id_patient
+)final"
+))
+
+data_eid<-fetch(eid_data,n=-1)
+data_eid = data_eid %>%
+  filter(!Office %in% c("JER","CAY"))
+
+```
+
+
+
+## Table des PCRs non liés en FY25
+
+```{r,echo=FALSE}
+df_eid<-data_eid%>%
+  select(Patient_code,hospital,Office,Network,Code_mere,Liaison_mere,date_blood_taken,Quarter,Year)%>%
+  filter(Liaison_mere %in% "no" & Quarter %in% "Q4")
+
+if(nrow(df_eid)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(df_eid, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),pageLength = 4))
+}
+```
+
+
+```{r delivery without pcr, echo=FALSE}
+
+#Reported for the entire fiscal year
+start_date_dwp = '2025-01-01'
+end_date_dwp = '2025-07-30'
+
+del_pcr_sql<-dbSendQuery(
+    dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+    
+gsubfn::fn$identity("SELECT 
+concat(p.city_code,'/',p.hospital_code) as mother_site ,
+p.patient_code as mother_full_code,
+actual_delivery_date,  
+if(termination_of_pregnancy=1,'Yes','Non') as termination_of_pregnancy ,
+(case when termination_of_pregnancy_reason=1 then 'Miscarriage'
+ when termination_of_pregnancy_reason=2 then 'DeathAfterDelivery'
+ else 'Unknown'
+ end
+) as terminaison_of_pregnancy_reason,
+tmb.first_name as FirstName, 
+tmb.last_name as Last_Name,
+if(tmb.patient_doesnot_accept_visits=1,'Not Accept visit','Accept') as Patient_doesnot_accept_visits,
+if(tmb.is_address_incorrect=1,'Fausse Adresse','Adresse Correcte') as Fausse_Adresse,
+if(tmb.is_abandoned=1,'Abandonee','Non') as Abandon,
+tmb.abandoned_date as Date_abandon,
+(case 
+ when abandoned_reason=1 then 'Parents refused to cooperate'
+ when abandoned_reason=2 then 'Family moved city'
+ when abandoned_reason=3 then 'No contact telephone or address'
+ when abandoned_reason=4 then 'Transfer to non Caris site'
+ else '0'
+ end
+) as Abandon_reason,
+tmb.abandoned_reason_other_describe  as abandoned_reason_other_describe 
+FROM
+tracking_pregnancy tp
+LEFT JOIN
+patient p ON p.id = id_patient_mother
+LEFT JOIN
+testing_mereenfant tm ON CONCAT(tm.mother_city_code,
+                                '/',
+                                tm.mother_hospital_code,
+                                '/',
+                                tm.mother_code) = p.patient_code
+LEFT JOIN
+testing_specimen ts ON ts.id_patient = tm.id_patient
+left join tracking_motherbasicinfo tmb on tp.id_patient_mother = tmb.id_patient
+WHERE
+actual_delivery_date BETWEEN '`start_date_dwp`' AND '`end_date_dwp`'
+AND ts.id IS NULL
+GROUP BY id_patient_mother"))
+
+
+#Fetch the data
+del_pcr=fetch(del_pcr_sql,n=-1)
+```
+
+
+# GROSSESSES AJOUTEES SUR LE SYSTEME SANS INFORMATION
+
+
+## Table des grossesses ajoutées sur le système sans aucune information pertinente
+
+```{r grossesse, echo=FALSE}
+#Reported for the entire fiscal year
+
+start_date_gross = as.character(start_date0)
+end_date_gross = as.character(end_date0)
+
+gross_x<-dbSendQuery(
+    dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+    
+   gsubfn::fn$identity("SELECT
+p.patient_code,
+tp.created_at AS 'Date pregnancy added on hivhaiti',
+tp.ddr,
+tp.dpa,
+tp.actual_delivery_date,
+IF(cp.id_patient IS NOT NULL,
+   'yes',
+   'no') AS is_in_club,
+tmi.first_name,
+tmi.last_name,
+tmi.dob,
+tmi.address
+FROM
+tracking_pregnancy tp
+LEFT JOIN
+patient p ON p.id = tp.id_patient_mother
+LEFT JOIN
+club_patient cp ON cp.id_patient = tp.id_patient_mother
+left join tracking_motherbasicinfo tmi on tmi.id_patient = tp.id_patient_mother
+WHERE
+p.linked_to_id_patient = 0
+AND tp.created_at BETWEEN '`start_date_gross`' AND '`end_date_gross`'"))
+    
+    
+ gross=fetch(gross_x,n=-1) %>%
+   mutate(site_code=substr(patient_code,0,8))
+ #gross<-left_join(gross_y,lookup_coord_site,by='site_code')
+ #gross$coordonnatrices[is.na(gross$coordonnatrices)]<-'---'
+ 
+ 
+ #Replace NA & NULL values by 0000-00-00
+ 
+ gross$ddr[is.na(gross$ddr)]<-'0000-00-00'
+ gross$ddr[is.null(gross$ddr)]<-'0000-00-00'
+ 
+ gross$dpa[is.na(gross$dpa)]<-'0000-00-00'
+ gross$dpa[is.null(gross$dpa)]<-'0000-00-00'
+ 
+ gross$actual_delivery_date[is.na(gross$actual_delivery_date)]<-'0000-00-00'
+ gross$actual_delivery_date[is.null(gross$actual_delivery_date)]<-'0000-00-00'
+ 
+ 
+    
+ gross1<-gross%>%mutate(site_code=substr(patient_code,0,8)) %>%
+   filter(ddr %in% '0000-00-00' & dpa %in% '0000-00-00' & actual_delivery_date %in% '0000-00-00')%>%
+   distinct(patient_code, .keep_all=T)
+
+if(nrow(gross1)==0){
+  print("Il n'y a pas d'activite")
+}else{
+#Table
+datatable(gross1, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 3))  
+}
+```
+
+
+
+
+# GROSSESSES AJOUTEES AU COURS DE LA SEMAINE ECOULEE (DU `r prev` AU `r after`)
+
+## Liste des femmes enceintes ajoutées sur le système la semaine écoulée
+
+```{r,echo=FALSE}
+gross$`Date pregnancy added on hivhaiti`<-as.Date(gross$`Date pregnancy added on hivhaiti`)
+gross2<-gross%>%
+  filter(`Date pregnancy added on hivhaiti`>=prev & `Date pregnancy added on hivhaiti`<=after)
+
+
+if(nrow(gross2)==0){
+  print("Il n'y a pas d'activite")
+}else{
+#Table
+datatable(gross2, extensions = 'Buttons', filter = 'bottom',
+          options = list(dom = 'Bfrtip',
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#800000', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                         pageLength = 4))
+}
+```
+
+
+## ANALYSE DES DONNEES PCR
+
+```{python,echo=FALSE}
+
+#Mastersheet club
+py_p_start = date.today()
+py_p_end = date.today()
+py_start_date = date.today() + relativedelta(months = -24)
+py_end_date = date.today() + relativedelta(months = 9)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Convert python date object into R one (with single quote)
+p_start0=as.Date(py$py_p_start)
+p_start<-sQuote(p_start0,options(useFancyQuotes = TRUE))
+
+p_end0=as.Date(py$py_p_end)
+p_end<-sQuote(p_end0,options(useFancyQuotes = TRUE))
+
+start_date0=as.Date(py$py_start_date)
+start_date<-sQuote(start_date0,options(useFancyQuotes = TRUE))
+
+
+end_date0=as.Date(py$py_end_date)
+end_date<-sQuote(end_date0,options(useFancyQuotes = TRUE))
+
+```
+
+
+
+```{r club_data, echo=FALSE, message=FALSE, warning=FALSE}
+#Downloading the club data for women on mastersheet
+
+sql_eid_ptme= dbSendQuery(
+  
+  dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+  
+  gsubfn::fn$identity("
+  
+select a.*, 
+p.patient_code,
+IF(cp.id_patient IS NOT NULL, 'yes', 'no') AS in_club,
+info_club.club_name as Club_name,
+b.date as club_session_date,
+tmi.why_this_woman_does_not_belong_to_a_club,
+CASE
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 1 THEN 'N\ ’était pas au courant du club'
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 2 THEN 'Distance/Proximité (clubs trop loin)'
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 3 THEN 'Incompatibilité d\ ’horaire'
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 4 THEN 'Raison économique'
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 5 THEN 'Stigmatisation'
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 6 THEN 'Dénie (n\ ’accepte pas son statut)'
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 7 THEN 'Partenaire n’est pas au courant de son statut'
+WHEN tmi.why_this_woman_does_not_belong_to_a_club = 8 THEN 'Autres'
+ELSE '---'
+END AS woman_does_not_belong_to_a_club_definition ,
+
+tmi.this_woman_does_not_belong_to_a_club_reason_other
+
+from
+
+((SELECT
+  tmi.id_patient
+  FROM
+  tracking_pregnancy tp
+  LEFT JOIN tracking_motherbasicinfo tmi ON tmi.id_patient = tp.id_patient_mother
+  WHERE
+  (tp.dpa BETWEEN `start_date` AND `end_date`)
+  OR ((tp.ddr + INTERVAL 9 MONTH + INTERVAL 7 DAY) BETWEEN `start_date` AND `end_date`)
+  OR (tp.actual_delivery_date BETWEEN `start_date` AND `end_date`) OR (tp.created_at between `p_start` and `p_end`) OR (tmi.created_at between `p_start` and `p_end`))
+  UNION (SELECT
+         p.id AS id_patient
+         FROM
+         testing_mereenfant tme
+         LEFT JOIN patient p ON p.patient_code = CONCAT(tme.mother_city_code, '/', tme.mother_hospital_code, '/', tme.mother_code)
+         WHERE
+         tme.infant_dob BETWEEN `start_date` AND `end_date`) UNION (SELECT
+                                                                  id_patient_mother AS id_patient
+                                                                  FROM
+                                                                  tracking_children tc
+                                                                  LEFT JOIN tracking_motherbasicinfo tmi2 on tmi2.id_patient = tc.id_patient_mother
+                                                                  LEFT JOIN testing_mereenfant tm ON tm.id_patient = tc.id_patient_child
+                                                                  WHERE (tmi2.id is not null) AND
+                                                                  (tm.infant_dob BETWEEN `start_date` AND `end_date`)
+                                                                  OR (tc.dob BETWEEN `start_date` AND `end_date`))) a
+left join tracking_motherbasicinfo tmi on a.id_patient = tmi.id_patient
+left join club_patient cp on a.id_patient = cp.id_patient
+left join (select distinct club.name as club_name, patient.id as id_patient_club, patient_code , club_session.date as club_session_date
+           from session
+           left join club_session on club_session.id=id_club_session
+           left join club on club.id=id_club
+           left join patient on patient.id=id_patient
+           where is_present=1 and club_type=1 and left(patient_code,8) is not null )info_club on info_club.id_patient_club = a.id_patient
+
+LEFT JOIN
+(SELECT 
+  MAX(cs2.date) AS 'date', s2.id_patient
+  FROM
+  session s2
+  LEFT JOIN club_session cs2 ON cs2.id = s2.id_club_session
+  WHERE
+  s2.is_present = 1
+  GROUP BY s2.id_patient) b ON b.id_patient = a.id_patient
+left join patient p on a.id_patient = p.id
+group by patient_code"))
+
+
+sql2=fetch(sql_eid_ptme,n=-1)
+
+sql_eid_ptme_cc= dbSendQuery(
+  
+  dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com'),
+  
+  gsubfn::fn$identity("SELECT 
+        t0.is_present,
+            t0.club_motivation,
+            t0.next_club_date,
+            t0.patient_code,
+            t0.is_present AS is_patient_present_at_time_of_visit,
+            IF(t0.is_patient_consent = 0, 'no', 'yes') AS is_patient_consent
+    FROM
+        tracking_ptme_visit t0
+         inner join patient px on px.patient_code=t0.patient_code
+    INNER JOIN (SELECT 
+        MAX(t.date_of_visit) AS max_date, t.patient_code
+    FROM
+        tracking_ptme_visit t
+    GROUP BY t.patient_code) b ON b.patient_code = t0.patient_code
+        AND t0.date_of_visit = b.max_date"))
+  sql_tracking_visit = fetch(sql_eid_ptme_cc, n=-1)
+
+  #  merge the two dataframes
+  sql2 = merge(sql2, sql_tracking_visit, by = "patient_code", all.x = TRUE)
+```
+
+
+```{r,echo=FALSE}
+sql2_ptme<-sql2%>%
+  rename('Code_mere'='patient_code')
+
+```
+
+
+
+```{r,echo=FALSE}
+#EID DATA
+
+#The date (year) must be updated periodically (each fiscal year) at line 1238
+
+#Setting the quarter
+period = 'Q2'
+
+sql1_eid<-data_eid%>%
+  rename('lab_code'='Site_or_lab_code')%>%
+  filter(Quarter %in% period)
+  
+
+```
+
+
+
+
+
+```{r,echo=FALSE}
+#Joining the 2 dataframes
+eid_ptme_club_df<-left_join(sql1_eid,sql2_ptme,by='Code_mere')%>%select(Patient_code,Network,Liaison_mere,in_club,Result,date_of_birth,date_blood_taken)
+
+#Replacement
+#in_club variable
+eid_ptme_club_df$in_club[is.na(eid_ptme_club_df$in_club)]<-"---"
+eid_ptme_club_df$in_club[eid_ptme_club_df$in_club=="yes"]<-"in_club"
+eid_ptme_club_df$in_club[eid_ptme_club_df$in_club=="no"]<-"not_in_club"
+
+#Result variable
+eid_ptme_club_df$Result[eid_ptme_club_df$Result=="ADN VIH-1 Detècté"]<-"positif"
+eid_ptme_club_df$Result[eid_ptme_club_df$Result=="ADN VIH-1 Non-Detècté"]<-"négatif"
+
+
+#Function for age calculation in month
+month_diff <- function(d) { lt <- as.POSIXlt(as.Date(d, origin="1900-01-01")); 
+                          lt$year*12 + lt$mon } 
+agecalc <- function(d1, d2) {month_diff(d2) - month_diff(d1) }
+
+
+#Adding a new column: age
+eid_ptme_club_df<-eid_ptme_club_df%>%
+  mutate(age=agecalc(as.Date(date_of_birth),as.Date(date_blood_taken)))
+
+#Building the age groups for further plotting
+setDT(eid_ptme_club_df)[age <=2, tranche_age := "0_2"]
+eid_ptme_club_df[age >2 & age <=6, tranche_age := "3_6"]
+eid_ptme_club_df[age >6 & age <=12, tranche_age := "7_12"]
+eid_ptme_club_df[age >12, tranche_age := "outlier"]
+
+```
+
+
+:::card
+## Représentation graphique du taux de positivité des enfants EID
+
+```{r,echo=FALSE}
+eid_tx_pos<-sql1_eid%>%
+  group_by(Result)%>%
+  count()
+
+n_total<-sum(eid_tx_pos$n)
+
+if(nrow(gross1)==0){
+  print("Il n'y a pas d'activite")
+}else{
+#Bar chart
+eid_tx_pos%>%
+ggplot(aes(fill=Result, y=n, x=reorder(Result,n))) + 
+  geom_bar(stat="identity",color="black",show.legend = FALSE) +
+  geom_label(fill="white",aes(label =paste0(round((n/n_total)*100,2),'%'), hjust = 0.5,vjust=0.5),color="black",
+             size=3.3,show.legend = F)+
+  scale_fill_viridis(discrete = T, option = "D",direction=-1) +
+  coord_flip(y=c(0,1.3*n_total))+
+  ggtitle(" ")+
+  labs(caption=paste("Data source: hivhaiti",sep = " / ", Sys.Date()))+
+  theme_bw()+
+  theme(
+    plot.title = element_text(color = "black", size = 13, family="cambria", face = "bold",hjust=0.5,vjust=0.8),
+    plot.caption = element_text(face="italic",size = 10),
+    axis.text.x = element_text(size = 12,family="Cambria"),
+    axis.title.y = element_text(size = 12,family = "Cambria"),
+    strip.text = element_text(size = 12))+
+  xlab("")+
+  ylab("")
+}
+```
+:::
+
+
+## Nombre d’enfants exposés ayant un test PCR par tranche d’âge en mois pour `r paste(period,sep="_","FY25")`: mères en club vs mères non en club vs mères non sur hivhaiti
+
+:::card
+```{r,fig.height=7, echo=FALSE}
+eid_ptme_club_df%>%
+  select(tranche_age,in_club)%>%
+  group_by(tranche_age,in_club)%>%
+  count()%>%
+  ungroup()->eid_ptme_club_df1
+
+if(nrow(eid_ptme_club_df1)==0){
+  print("Il n'y a pas d'activite")
+}else{
+eid_ptme_club_df1%>%
+  group_by(in_club)%>%
+    mutate(prop=n/sum(n))%>%
+  ggplot(aes(fill=tranche_age, y=n, x=reorder(in_club,n))) + 
+  geom_bar(position="dodge", stat="identity",color="black") +
+  geom_text(aes(label = paste0(round(prop*100,2),"%")), fill="white",vjust=-0.8,hjust=0.5,
+             position = position_dodge(width = 0.9),size=3.3)+
+  scale_fill_viridis(option="D",discrete = T)+
+  coord_cartesian(ylim = c(0,max(eid_ptme_club_df1$n)+0.05*max(eid_ptme_club_df1$n)))+
+  ggtitle("") +
+  labs(caption=paste("Data Source: hivhaiti",sep = " / ",Sys.Date())) +
+  theme_bw()+
+  theme(
+    plot.title = element_text(color = "black", size = 14, family="Cambria",face = "bold",hjust = 0.5),
+    plot.caption = element_text(face="italic",size=10),
+    axis.text.x = element_text(size = 12,family="Cambria"),
+    axis.title.y = element_text(size = 12,family = "Cambria"),
+    strip.text = element_text(size = 12,family="Cambria"))+
+  xlab("")+
+  ylab("")
+}
+```
+:::
+
+
+
+```{r,echo=FALSE}
+#Calculation for numbers embedded in text
+testes_0_2<-eid_ptme_club_df1%>%
+  filter(tranche_age=="0_2")
+
+testes_2_6<-eid_ptme_club_df1%>%
+  filter(tranche_age=="3_6")
+
+testes_6_12<-eid_ptme_club_df1%>%
+  filter(tranche_age=="7_12")
+#-----------------------------------------------------
+
+mother_not_rec<-eid_ptme_club_df1%>%
+  filter(in_club=="---")
+
+mother_club_rec<-eid_ptme_club_df1%>%
+  filter(in_club=="in_club")
+
+mother_not_club_rec<-eid_ptme_club_df1%>%
+  filter(in_club=="not_in_club")
+```
+
+
+:::card
+***Note***: Du 2025-01-01 au `r Sys.Date()`, `r sum(eid_ptme_club_df1$n)` enfants ont été testés dont `r sum(testes_0_2$n)` sont âgés entre 0 et 2 mois, `r sum(testes_2_6$n)` entre 3 et 6 mois et `r sum(testes_6_12$n)` entre 7 et 12 mois. Parmi ces enfants, `r sum(mother_not_rec$n)` d’entre eux n’ont pas de mère enregistrée sur HIV Haiti, `r sum(mother_club_rec$n)` d’entre eux ont leur mère en club et `r sum(mother_not_club_rec$n)` ont leur mère non en club.
+:::
+
+
+
+## Nombre d’enfants exposés ayant un test PCR dans les temps (0 - 2 mois) vs Nombre d’enfants exposés ayant un test PCR après 2 mois (3 – 12 mois) pour `r paste(period,sep="_","FY23")`: mères non sur hivhaiti
+
+:::card
+```{r, fig.height=8, echo=FALSE}
+eid_ptme_club_df2<-eid_ptme_club_df%>%
+  filter(Liaison_mere=="no")%>%
+  mutate(groupe_age=ifelse(tranche_age=="0_2","0_2","3_12"))%>%
+  select(Network,groupe_age)%>%
+    group_by(Network,groupe_age)%>%
+  count()%>%
+  ungroup()
+
+if(nrow(eid_ptme_club_df2)==0){
+  print("Il n'y a pas d'activite")
+}else{
+eid_ptme_club_df2%>%
+  group_by(Network)%>%
+  mutate(prop=n/sum(n))%>%
+  ggplot(aes(fill=groupe_age, y=n, x=reorder(Network,n))) + 
+  geom_bar(position="dodge", stat="identity",color="black") +
+  geom_text(aes(label = n), fill="white",vjust=0.5,hjust=-0.3,
+             position = position_dodge(width = 0.9),size=3.3)+
+  scale_fill_manual(values=c("#00543E", "#CAC7A7")) +
+  coord_flip(y = c(0,max(eid_ptme_club_df2$n)+0.1*max(eid_ptme_club_df2$n)))+
+  ggtitle("") +
+  labs(caption=paste("Data Source: hivhaiti",sep = " / ",Sys.Date())) +
+  theme_bw()+
+  theme(
+    plot.title = element_text(color = "black", size = 14, family="Cambria",face = "bold",hjust = 0.5),
+    plot.caption = element_text(face="italic",size=10),
+    axis.text.x = element_text(size = 12,family="Cambria"),
+    axis.title.y = element_text(size = 12,family = "Cambria"),
+    strip.text = element_text(size = 12,family="Cambria"))+
+  xlab("")+
+  ylab("")
+}
+```
+:::
+
+
+
+
+## Nombre d'enfants  exposés ayant un test PCR positif  vs Nombre d'enfants exposés ayant un test PCR négatif : mères en club vs mères non en club vs mères non sur hivhaiti
+
+:::card
+```{r,fig.height=7, echo=FALSE}
+eid_ptme_club_df3<-eid_ptme_club_df%>%
+  select(in_club,Result)%>%
+    group_by(in_club,Result)%>%
+  count()%>%
+  ungroup()
+
+if(nrow(eid_ptme_club_df3)==0){
+  print("Il n'y a pas d'activite")
+}else{
+eid_ptme_club_df3%>%
+  group_by(in_club)%>%
+  mutate(prop=n/sum(n))%>%
+  ggplot(aes(fill=Result, y=n, x=reorder(in_club,n))) + 
+  geom_bar(position="dodge", stat="identity",color="black") +
+  geom_text(aes(label = paste0(round(prop*100,2),"%")), fill="white",vjust=-0.5,hjust=0.5,
+             position = position_dodge(width = 0.9),size=3.3)+
+  scale_fill_viridis(option="E",discrete = T)+
+  coord_cartesian(ylim = c(0,max(eid_ptme_club_df3$n)+0.1*max(eid_ptme_club_df3$n)))+
+  ggtitle("") +
+  labs(caption=paste("Data Source: hivhaiti",sep = " / ",Sys.Date())) +
+  theme_bw()+
+  theme(
+    plot.title = element_text(color = "black", size = 14, family="Cambria",face = "bold",hjust = 0.5),
+    plot.caption = element_text(face="italic",size=10),
+    axis.text.x = element_text(size = 12,family="Cambria"),
+    axis.title.y = element_text(size = 12,family = "Cambria"),
+    strip.text = element_text(size = 12,family="Cambria"))+
+  xlab("")+
+  ylab("")
+}
+```
+:::
+
+
+```{r,echo=FALSE}
+#Calculation for numbers embedded in text
+eid_ptme_res_df_neg<-eid_ptme_club_df%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "négatif")
+
+eid_ptme_res_df_pos<-eid_ptme_club_df%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "positif")
+
+
+#---------------------------------------------------------------------
+
+eid_ptme_res_df_neg_not_hiv<-eid_ptme_club_df%>%
+  filter(in_club %in% "---")%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "négatif")
+
+
+eid_ptme_res_df_neg_club<-eid_ptme_club_df%>%
+  filter(in_club %in% "in_club")%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "négatif")
+
+
+eid_ptme_res_df_neg_not_club<-eid_ptme_club_df%>%
+  filter(in_club %in% "not_in_club")%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "négatif")
+
+###############################
+
+eid_ptme_res_df_pos_not_hiv<-eid_ptme_club_df%>%
+  filter(in_club %in% "---")%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "positif")
+
+
+eid_ptme_res_df_pos_club<-eid_ptme_club_df%>%
+  filter(in_club %in% "in_club")%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "positif")
+
+
+eid_ptme_res_df_pos_not_club<-eid_ptme_club_df%>%
+  filter(in_club %in% "not_in_club")%>%
+  select(Result)%>%
+  group_by(Result)%>%
+  count()%>%
+  filter(Result %in% "positif")
+```
+
+
+:::card
+***Note***: Parmi les enfants testés, `r sum(eid_ptme_res_df_neg$n)` sont non détectés et `r sum(eid_ptme_res_df_pos$n)` sont dépistés positifs. Les autres résultats ne sont pas encore retournés.
+
+-	`r sum(eid_ptme_res_df_neg$n)` : `r sum(eid_ptme_res_df_neg_not_hiv$n)` mère(s) non sur HIV Haiti, `r sum(eid_ptme_res_df_neg_club$n)` mère(s) en club, `r sum(eid_ptme_res_df_neg_not_club$n)` mère(s) non en club.
+-	`r sum(eid_ptme_res_df_pos$n)` : `r sum(eid_ptme_res_df_pos_not_hiv$n)` mères non sur HIV Haiti, `r sum(eid_ptme_res_df_pos_club$n)` mère(s) en club, `r sum(eid_ptme_res_df_pos_not_club$n)` mère(s) non en club.
+:::
+
+:::card
+## Nombre d'enfants exposés ayant un test PCR positif vs Nombre d'enfants exposés ayant un test PCR négatif : mères non sur hivhaiti
+
+
+```{r, fig.height=8, echo=FALSE}
+eid_ptme_club_df4<-eid_ptme_club_df%>%
+  filter(Liaison_mere=="no")%>%
+  select(Network,Result)%>%
+  filter(Result %in% c("positif","négatif"))%>%
+  group_by(Network,Result)%>%
+  count()%>%
+  ungroup()
+
+if(nrow(eid_ptme_club_df4)==0){
+  print("Il n'y a pas d'activite")
+}else{
+eid_ptme_club_df4%>%
+  group_by(Network)%>%
+  mutate(prop=n/sum(n))%>%
+  ggplot(aes(fill=Result, y=n, x=reorder(Network,n))) + 
+  geom_bar(position="dodge", stat="identity",color="black") +
+  geom_text(aes(label = n), fill="white",vjust=0.5,hjust=-0.3,
+             position = position_dodge(width = 0.9),size=3.3)+
+  scale_fill_manual(values=c("#00AFBB", "#CAC7A7")) +
+  coord_flip(y= c(0,max(eid_ptme_club_df4$n)+0.1*max(eid_ptme_club_df4$n)))+
+  ggtitle("") +
+  labs(caption=paste("Data Source: hivhaiti",sep = " / ",Sys.Date())) +
+  theme_bw()+
+  theme(
+    plot.title = element_text(color = "black", size = 14, family="Cambria",face = "bold",hjust = 0.5),
+    plot.caption = element_text(face="italic",size=10),
+    axis.text.x = element_text(size = 12,family="Cambria"),
+    axis.title.y = element_text(size = 12,family = "Cambria"),
+    strip.text = element_text(size = 12,family="Cambria"))+
+  xlab("")+
+  ylab("")
+}
+```
+:::
+
+## Tableau des enfants sans test PCR
+
+```{python,echo=FALSE}
+
+py_start_date = date.today() + relativedelta(months = -24)
+py_end_date = date.today() + relativedelta(months = 9)
+
+```
+
+```{r,echo=FALSE}
+start_date0=as.Date(py$py_start_date)
+start_date<-sQuote(start_date0,options(useFancyQuotes = TRUE))
+
+end_date0=as.Date(py$py_end_date)
+end_date<-sQuote(end_date0,options(useFancyQuotes = TRUE))
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) {
+  dbDisconnect(con)
+}
+
+conn= dbConnect(MySQL(), user='caris_readonly', password='longlivecaris!!', dbname='caris_db', host='caris.cwyvkxmtzny2.us-east-1.rds.amazonaws.com')
+     sans_pcr=dbSendQuery(
+        conn,
+
+gsubfn::fn$identity("
+SELECT 
+    not_tested.*,
+    IF(tmp.took_viral_load_test = 1,
+        'Yes',
+        'No') AS took_viral_load_test,
+    tmp.viral_load_count AS viral_load,
+    tmp.viral_load_date,
+    tmp.viral_load_collection_date,
+    tmp.viral_load_indetectable,
+    tpy.ddr,
+    tpy.dpa,
+    CASE
+        WHEN tpy.infant_has_no_pcr_test = 1 THEN 'infant has pcr test'
+        WHEN tpy.infant_has_no_pcr_test = 2 THEN 'infant has no pcr test'
+        ELSE 'N/A'
+    END AS infant_has_no_pcr_test,
+    CASE
+        WHEN tpy.no_pcr_reason = 1 THEN '1. Nourrisson non encore éligible'
+        WHEN tpy.no_pcr_reason = 2 THEN '2. Mère en dénie'
+        WHEN tpy.no_pcr_reason = 3 THEN '3. Mère perdue de vue'
+        WHEN tpy.no_pcr_reason = 4 THEN '4.Peur de résultat positif'
+        WHEN tpy.no_pcr_reason = 5 THEN '5. Femme non suivi dans ce site ( accouchement ponctuel)'
+        WHEN tpy.no_pcr_reason = 6 THEN '6. Moyens de contact incomplets ou faux'
+        WHEN tpy.no_pcr_reason = 7 THEN '7.Migration interne ou externe (A préciser)'
+        WHEN tpy.no_pcr_reason = 8 THEN '8. PCR fait dans un autre site. Code à lier'
+        WHEN tpy.no_pcr_reason = 9 THEN '9. Matériels PCR non disponibles dans le site'
+        WHEN tpy.no_pcr_reason = 10 THEN '10. Stigmatisation '
+        WHEN tpy.no_pcr_reason = 11 THEN '11.Enfant Decede'
+        WHEN tpy.no_pcr_reason = 12 THEN '12.Partenaire non au courant de son statut'
+        WHEN tpy.no_pcr_reason = 13 THEN '13. Habite dans une zone rouge'
+        ELSE 'N/A'
+    END AS no_pcr_reason,
+    tpy.migration_zone,
+    tm.infant_dob,
+    pt1.patient_code,
+    tpv.delivery_date AS delivery_date_commcare,
+    GREATEST(COALESCE(not_tested.actual_delivery_date, 0),
+            COALESCE(tpv.delivery_date, 0)) AS delivery_date_merge
+FROM
+    ((SELECT 
+        tmi.id_patient
+    FROM
+        tracking_pregnancy tp
+    LEFT JOIN tracking_motherbasicinfo tmi ON tmi.id_patient = tp.id_patient_mother
+    WHERE
+        (tp.dpa BETWEEN `start_date` AND `end_date`)
+            OR ((tp.ddr + INTERVAL 9 MONTH + INTERVAL 7 DAY) BETWEEN `start_date` AND `end_date`)
+            OR (tp.actual_delivery_date BETWEEN `start_date` AND `end_date`)
+            OR (tp.created_at BETWEEN `start_date` AND `end_date`)
+            OR (tmi.created_at BETWEEN `start_date` AND `end_date`)) UNION (SELECT 
+        p.id AS id_patient
+    FROM
+        testing_mereenfant tme
+    LEFT JOIN patient p ON p.patient_code = CONCAT(tme.mother_city_code, '/', tme.mother_hospital_code, '/', tme.mother_code)
+    WHERE
+        tme.infant_dob BETWEEN `start_date` AND `end_date`) UNION (SELECT 
+        id_patient_mother AS id_patient
+    FROM
+        tracking_children tc
+    LEFT JOIN tracking_motherbasicinfo tmi2 ON tmi2.id_patient = tc.id_patient_mother
+    LEFT JOIN testing_mereenfant tm ON tm.id_patient = tc.id_patient_child
+    WHERE
+        (tmi2.id IS NOT NULL)
+            AND (tm.infant_dob BETWEEN `start_date` AND `end_date`)
+            OR (tc.dob BETWEEN `start_date` AND `end_date`))) all_ptme
+        LEFT JOIN
+    tracking_motherbasicinfo tmi ON all_ptme.id_patient = tmi.id_patient
+        LEFT JOIN
+    patient pt ON pt.id = all_ptme.id_patient
+        LEFT JOIN
+    tracking_pregnancy tpy ON tpy.id_patient_mother = all_ptme.id_patient
+        LEFT JOIN
+    tracking_motherfollowup tmp ON tmp.id_patient = all_ptme.id_patient
+        LEFT JOIN
+    testing_mereenfant tm ON UPPER(CONCAT(tm.mother_city_code,
+                    '/',
+                    tm.mother_hospital_code,
+                    '/',
+                    tm.mother_code)) = pt.patient_code
+        LEFT JOIN
+    patient pt1 ON pt1.id = tm.id_patient
+        LEFT JOIN
+    tracking_ptme_visit tpv ON tpv.patient_code = UPPER(CONCAT(tm.mother_city_code,
+                    '/',
+                    tm.mother_hospital_code,
+                    '/',
+                    tm.mother_code))
+        RIGHT JOIN
+    (SELECT 
+        CONCAT(p.city_code, '/', p.hospital_code) AS mother_site,
+            p.patient_code AS mother_code,
+            actual_delivery_date,
+            IF(termination_of_pregnancy = 1, 'Yes', 'Non') AS termination_of_pregnancy,
+            (CASE
+                WHEN termination_of_pregnancy_reason = 1 THEN 'Miscarriage'
+                WHEN termination_of_pregnancy_reason = 2 THEN 'DeathAfterDelivery'
+                ELSE 'Unknown'
+            END) AS termination_of_pregnancy_reason,
+            IF(tmb.is_dead = 1, 'Yes', 'No') AS is_dead,
+            tmb.death_date AS death_date,
+            tmb.first_name AS first_name,
+            tmb.last_name AS last_name,
+            tmb.telephone AS telephone,
+            tmb.telephone2 AS telephone2,
+            tmb.address AS adresse,
+            IF(tmb.patient_doesnot_accept_visits = 1, 'Not Accept visit', 'Accept') AS Patient_doesnot_accept_visits,
+            IF(tmb.is_address_incorrect = 1, 'Fausse Adresse', 'Adresse Correcte') AS Fausse_Adresse,
+            IF(tmb.is_abandoned = 1, 'Abandonee', 'Non') AS Abandon,
+            tmb.abandoned_date AS Date_abandon,
+            (CASE
+                WHEN abandoned_reason = 1 THEN 'Parents refused to cooperate'
+                WHEN abandoned_reason = 2 THEN 'Family moved city'
+                WHEN abandoned_reason = 3 THEN 'No contact telephone or address'
+                WHEN abandoned_reason = 4 THEN 'Transfer to non Caris site'
+                ELSE '0'
+            END) AS Abandon_reason,
+            tmb.abandoned_reason_other_describe AS abandoned_reason_other_describe,
+            ts.date_blood_taken,
+            ts.pcr_result,
+            ts.pcr_result_date,
+            ts.which_pcr
+    FROM
+        tracking_pregnancy tp
+    LEFT JOIN patient p ON p.id = id_patient_mother
+    LEFT JOIN testing_mereenfant tm ON UPPER(CONCAT(tm.mother_city_code, '/', tm.mother_hospital_code, '/', tm.mother_code)) = p.patient_code or tm.mother_code=p.patient_code
+    LEFT JOIN testing_specimen ts ON ts.id_patient = tm.id_patient
+    LEFT JOIN tracking_motherbasicinfo tmb ON tp.id_patient_mother = tmb.id_patient
+    WHERE
+        actual_delivery_date BETWEEN `start_date` AND `end_date`
+            AND ts.id IS NULL
+    GROUP BY id_patient_mother) not_tested ON pt.patient_code = not_tested.mother_code
+GROUP BY not_tested.mother_code
+ORDER BY pt.patient_code
+  LIMIT 100000;"
+
+))
+
+sans_pcr=fetch(sans_pcr,n=-1)
+sans_pcr0=sans_pcr%>%
+  filter(termination_of_pregnancy=="Non" & is_dead=="No" & Abandon=="Non")%>%
+  rename(site_code= mother_site)
+
+
+#sans_pcr0=left_join(sans_pcr0, lookup_coord_site, by = 'site_code')
+
+```
+
+
+```{python,echo=FALSE}
+oneyear=date.today()+ relativedelta(months=-12)
+oneyear1=str(oneyear)
+sans_pcr1=r.sans_pcr0
+sans_pcr1=sans_pcr1[sans_pcr1["actual_delivery_date"]>= oneyear1]
+
+```
+
+
+```{r,echo=FALSE}
+sans_pcr0=py$sans_pcr1
+
+if(nrow(sans_pcr0)==0){
+  print("Il n'y a pas d'activite")
+}else{
+datatable(sans_pcr0, filter = 'bottom', extensions = 'Buttons',
+          options = list(dom = 'Bfrtip',width="120px",
+                         columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                         initComplete = JS(
+                           "function(settings, json) {",
+                           "$(this.api().table().header()).css({'background-color': '#0B1E2A', 'color': '#fff'});",
+                           "}"),
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),pageLength = 4))
+
+}
+```
+
+
+```{r, include=FALSE}
+lapply(dbListConnections(MySQL()), dbDisconnect)
+```
