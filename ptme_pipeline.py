@@ -273,9 +273,9 @@ ptme_not_in_club.to_excel('ptme_not_in_club.xlsx', index=False)
     # Étape 2 : Charger le fichier téléchargé
 today_str = datetime.today().strftime('%Y-%m-%d')
 # path = f"~/Downloads/caris-dashboard-app/data/PTME WITH PATIENT CODE {today_str}.xlsx"
-path = f"C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data\\PTME WITH PATIENT CODE {today_str}.xlsx"
+path = f"C:\\Users\\moise\\Downloads\\caris-dashboard-app\\data\\PTME WITH PATIENT CODE {today_str}.xlsx"
 # Ou encore mieux, utiliser une structure plus flexible :
-base_path = "C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data"
+base_path = "C:\\Users\\moise\\Downloads\\caris-dashboard-app\\data"
 path = f"{base_path}\\PTME WITH PATIENT CODE {today_str}.xlsx"
 
 caseid = pd.read_excel(os.path.expanduser(path))

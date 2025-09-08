@@ -92,10 +92,10 @@ def main():
 
     # Étape 2 : Charger le fichier téléchargé
     today_str = datetime.today().strftime('%Y-%m-%d')
-    path = f"C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data\\All_child_PatientCode_CaseID {today_str}.xlsx"
+    path = f"C:\\Users\\moise\\Downloads\\caris-dashboard-app\\data\\All_child_PatientCode_CaseID {today_str}.xlsx"
 
     # Ou encore mieux, utiliser une structure plus flexible :
-    base_path = "C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data"
+    base_path = "C:\\Users\\moise\\Downloads\\caris-dashboard-app\\data"
     path = f"{base_path}\\All_child_PatientCode_CaseID {today_str}.xlsx"
     caseid = pd.read_excel(os.path.expanduser(path))
 

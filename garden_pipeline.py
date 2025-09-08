@@ -10,11 +10,11 @@ def main():
     
     today_str = datetime.today().strftime('%Y-%m-%d')
     # Nouveau chemin (correct)
-    path = f"C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data\\All Gardens {today_str}.xlsx"
+    path = f"C:\\Users\\moise\\Downloads\\caris-dashboard-app\\data\\All Gardens {today_str}.xlsx"
     # Ou encore mieux, utiliser une structure plus flexible :
-    base_path = "C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data"
+    base_path = "C:\\Users\\moise\\Downloads\\caris-dashboard-app\\data"
     path = f"{base_path}\\All Gardens {today_str}.xlsx"
-    garden_path = os.path.expanduser(f"C:\\Users\\moise\\caris-app\\caris-dashboard-app\\data\\All Gardens {today_str}.xlsx")
+    garden_path = os.path.expanduser(f"C:\\Users\\moise\\Downloads\\caris-dashboard-app\\data\\All Gardens {today_str}.xlsx")
 
     # Étape 2 : Vérifier l'existence du fichier principal
     if not os.path.exists(garden_path):
