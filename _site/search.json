@@ -1,96 +1,5 @@
 [
   {
-    "objectID": "tracking-oev.html#nombre-doev-en-club-par-office",
-    "href": "tracking-oev.html#nombre-doev-en-club-par-office",
-    "title": "PROGRAMME OEV",
-    "section": "2.1 Nombre d’OEV en club par office",
-    "text": "2.1 Nombre d’OEV en club par office"
-  },
-  {
-    "objectID": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-en-club",
-    "href": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-en-club",
-    "title": "PROGRAMME OEV",
-    "section": "2.2 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans en club",
-    "text": "2.2 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans en club"
-  },
-  {
-    "objectID": "tracking-oev.html#pyramide-des-ages-des-oev",
-    "href": "tracking-oev.html#pyramide-des-ages-des-oev",
-    "title": "PROGRAMME OEV",
-    "section": "2.3 Pyramide des ages des OEV",
-    "text": "2.3 Pyramide des ages des OEV"
-  },
-  {
-    "objectID": "tracking-oev.html#nombre-doev-non-en-club-par-office",
-    "href": "tracking-oev.html#nombre-doev-non-en-club-par-office",
-    "title": "PROGRAMME OEV",
-    "section": "2.4 Nombre d’OEV non en club par office",
-    "text": "2.4 Nombre d’OEV non en club par office"
-  },
-  {
-    "objectID": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-non-en-club",
-    "href": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-non-en-club",
-    "title": "PROGRAMME OEV",
-    "section": "2.5 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans non en club",
-    "text": "2.5 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans non en club"
-  },
-  {
-    "objectID": "tracking-oev.html#liste-des-oev-non-en-club",
-    "href": "tracking-oev.html#liste-des-oev-non-en-club",
-    "title": "PROGRAMME OEV",
-    "section": "2.6 Liste des OEV non en club",
-    "text": "2.6 Liste des OEV non en club"
-  },
-  {
-    "objectID": "tracking-oev.html#participation-en-club-des-oev-pour-cette-semaine",
-    "href": "tracking-oev.html#participation-en-club-des-oev-pour-cette-semaine",
-    "title": "PROGRAMME OEV",
-    "section": "3.1 Participation en club des oev pour cette semaine",
-    "text": "3.1 Participation en club des oev pour cette semaine"
-  },
-  {
-    "objectID": "tracking-oev.html#nombre-doev-avec-un-comptage-de-menage",
-    "href": "tracking-oev.html#nombre-doev-avec-un-comptage-de-menage",
-    "title": "PROGRAMME OEV",
-    "section": "4.1 Nombre d’OEV avec un comptage de menage",
-    "text": "4.1 Nombre d’OEV avec un comptage de menage"
-  },
-  {
-    "objectID": "tracking-oev.html#liste-des-enfants-sans-comptage-de-menage",
-    "href": "tracking-oev.html#liste-des-enfants-sans-comptage-de-menage",
-    "title": "PROGRAMME OEV",
-    "section": "4.2 Liste des enfants sans comptage de menage",
-    "text": "4.2 Liste des enfants sans comptage de menage"
-  },
-  {
-    "objectID": "tracking-oev.html#représentation-graphique-des-bénéficiaires-indirects-par-bureau",
-    "href": "tracking-oev.html#représentation-graphique-des-bénéficiaires-indirects-par-bureau",
-    "title": "PROGRAMME OEV",
-    "section": "4.3 Représentation graphique des bénéficiaires indirects par bureau",
-    "text": "4.3 Représentation graphique des bénéficiaires indirects par bureau"
-  },
-  {
-    "objectID": "tracking-oev.html#représentation-graphique-des-fréquences-denfants-testés-vih--vih-non-testés",
-    "href": "tracking-oev.html#représentation-graphique-des-fréquences-denfants-testés-vih--vih-non-testés",
-    "title": "PROGRAMME OEV",
-    "section": "5.1 Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…",
-    "text": "5.1 Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…"
-  },
-  {
-    "objectID": "tracking-oev.html#liste-des-enfants-sans-code-st",
-    "href": "tracking-oev.html#liste-des-enfants-sans-code-st",
-    "title": "PROGRAMME OEV",
-    "section": "5.2 Liste des enfants sans code ST",
-    "text": "5.2 Liste des enfants sans code ST"
-  },
-  {
-    "objectID": "tracking-oev.html#liste-des-fratries-sans-test-de-dépistage",
-    "href": "tracking-oev.html#liste-des-fratries-sans-test-de-dépistage",
-    "title": "PROGRAMME OEV",
-    "section": "5.3 Liste des fratries sans test de dépistage",
-    "text": "5.3 Liste des fratries sans test de dépistage"
-  },
-  {
     "objectID": "tracking-ptme.html#répartition-des-femmes-enceintes-par-bureau",
     "href": "tracking-ptme.html#répartition-des-femmes-enceintes-par-bureau",
     "title": "PROGRAMME PTME",
@@ -231,18 +140,18 @@
     "text": "7.3 Liste dynamique des femmes PTME aucune participation ni en club Q3 ni aucune en Q4 FY25 (jusqu’ici)"
   },
   {
-    "objectID": "tracking-ptme.html#représentation-graphique-des-présences-en-club-durant-la-semaine-écoulée-du-2025-09-01-au-2025-09-07",
-    "href": "tracking-ptme.html#représentation-graphique-des-présences-en-club-durant-la-semaine-écoulée-du-2025-09-01-au-2025-09-07",
+    "objectID": "tracking-ptme.html#représentation-graphique-des-présences-en-club-durant-la-semaine-écoulée-du-2025-09-08-au-2025-09-14",
+    "href": "tracking-ptme.html#représentation-graphique-des-présences-en-club-durant-la-semaine-écoulée-du-2025-09-08-au-2025-09-14",
     "title": "PROGRAMME PTME",
-    "section": "7.4 Représentation graphique des présences en club durant la semaine écoulée (du 2025-09-01 au 2025-09-07)",
-    "text": "7.4 Représentation graphique des présences en club durant la semaine écoulée (du 2025-09-01 au 2025-09-07)\n\nDurant cette période, sur 0 Femme(s) PTME attendues en club, était(aient) présente(s) contre qui était(aient) absente(s).\n\n\n\n\n[1] \"Il n'y a pas d'activite\""
+    "section": "7.4 Représentation graphique des présences en club durant la semaine écoulée (du 2025-09-08 au 2025-09-14)",
+    "text": "7.4 Représentation graphique des présences en club durant la semaine écoulée (du 2025-09-08 au 2025-09-14)\n\nDurant cette période, sur 20 Femme(s) PTME attendues en club, 9 était(aient) présente(s) contre 11 qui était(aient) absente(s)."
   },
   {
-    "objectID": "tracking-ptme.html#représentation-graphique-des-raisons-dabsence-en-club-durant-la-période-écoulée-du-2025-09-01-au-2025-09-07",
-    "href": "tracking-ptme.html#représentation-graphique-des-raisons-dabsence-en-club-durant-la-période-écoulée-du-2025-09-01-au-2025-09-07",
+    "objectID": "tracking-ptme.html#représentation-graphique-des-raisons-dabsence-en-club-durant-la-période-écoulée-du-2025-09-08-au-2025-09-14",
+    "href": "tracking-ptme.html#représentation-graphique-des-raisons-dabsence-en-club-durant-la-période-écoulée-du-2025-09-08-au-2025-09-14",
     "title": "PROGRAMME PTME",
-    "section": "7.5 Représentation graphique des raisons d’absence en club durant la période écoulée (du 2025-09-01 au 2025-09-07)",
-    "text": "7.5 Représentation graphique des raisons d’absence en club durant la période écoulée (du 2025-09-01 au 2025-09-07)\n\n\n[1] \"Il n'y a pas d'activité\""
+    "section": "7.5 Représentation graphique des raisons d’absence en club durant la période écoulée (du 2025-09-08 au 2025-09-14)",
+    "text": "7.5 Représentation graphique des raisons d’absence en club durant la période écoulée (du 2025-09-08 au 2025-09-14)"
   },
   {
     "objectID": "tracking-ptme.html#représentation-graphique-de-leffectif-total-des-femmes-ptme-attendues-en-club-en-q4-fy25-versus-celles-qui-y-ont-effectivement-participé",
@@ -340,7 +249,7 @@
     "href": "tracking-ptme.html#nombre-denfants-exposés-ayant-un-test-pcr-par-tranche-dâge-en-mois-pour-q2_fy25-mères-en-club-vs-mères-non-en-club-vs-mères-non-sur-hivhaiti",
     "title": "PROGRAMME PTME",
     "section": "11.4 Nombre d’enfants exposés ayant un test PCR par tranche d’âge en mois pour Q2_FY25: mères en club vs mères non en club vs mères non sur hivhaiti",
-    "text": "11.4 Nombre d’enfants exposés ayant un test PCR par tranche d’âge en mois pour Q2_FY25: mères en club vs mères non en club vs mères non sur hivhaiti\n\n\n\n\n\n\n\n\n\n\n\n\nNote: Du 2025-01-01 au 2025-09-08, 202 enfants ont été testés dont 161 sont âgés entre 0 et 2 mois, 39 entre 3 et 6 mois et 2 entre 7 et 12 mois. Parmi ces enfants, 13 d’entre eux n’ont pas de mère enregistrée sur HIV Haiti, 67 d’entre eux ont leur mère en club et 122 ont leur mère non en club."
+    "text": "11.4 Nombre d’enfants exposés ayant un test PCR par tranche d’âge en mois pour Q2_FY25: mères en club vs mères non en club vs mères non sur hivhaiti\n\n\n\n\n\n\n\n\n\n\n\n\nNote: Du 2025-01-01 au 2025-09-15, 202 enfants ont été testés dont 161 sont âgés entre 0 et 2 mois, 39 entre 3 et 6 mois et 2 entre 7 et 12 mois. Parmi ces enfants, 13 d’entre eux n’ont pas de mère enregistrée sur HIV Haiti, 67 d’entre eux ont leur mère en club et 122 ont leur mère non en club."
   },
   {
     "objectID": "tracking-ptme.html#nombre-denfants-exposés-ayant-un-test-pcr-dans-les-temps-0---2-mois-vs-nombre-denfants-exposés-ayant-un-test-pcr-après-2-mois-3-12-mois-pour-q2_fy23-mères-non-sur-hivhaiti",
@@ -369,125 +278,6 @@
     "title": "PROGRAMME PTME",
     "section": "11.8 Tableau des enfants sans test PCR",
     "text": "11.8 Tableau des enfants sans test PCR"
-  },
-  {
-    "objectID": "tracking-muso.html",
-    "href": "tracking-muso.html",
-    "title": "PROGRAMME MUSO",
-    "section": "",
-    "text": "Note: Durant cette semaine, un total de 0 groupe(s) a/ont créé(s)"
-  },
-  {
-    "objectID": "tracking-muso.html#nombre-de-groupes-créés-pour-cette-semaine",
-    "href": "tracking-muso.html#nombre-de-groupes-créés-pour-cette-semaine",
-    "title": "PROGRAMME MUSO",
-    "section": "",
-    "text": "Note: Durant cette semaine, un total de 0 groupe(s) a/ont créé(s)"
-  },
-  {
-    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-par-agent",
-    "href": "tracking-muso.html#nombre-de-bénéficiaires-par-agent",
-    "title": "PROGRAMME MUSO",
-    "section": "2.1 Nombre de bénéficiaires par agent",
-    "text": "2.1 Nombre de bénéficiaires par agent"
-  },
-  {
-    "objectID": "tracking-muso.html#liste-des-bénéficiaires-muso-actifs",
-    "href": "tracking-muso.html#liste-des-bénéficiaires-muso-actifs",
-    "title": "PROGRAMME MUSO",
-    "section": "2.2 Liste des bénéficiaires MUSO actifs",
-    "text": "2.2 Liste des bénéficiaires MUSO actifs"
-  },
-  {
-    "objectID": "tracking-muso.html#nombre-de-pvvih-par-agent",
-    "href": "tracking-muso.html#nombre-de-pvvih-par-agent",
-    "title": "PROGRAMME MUSO",
-    "section": "2.3 Nombre de PVVIH par agent",
-    "text": "2.3 Nombre de PVVIH par agent"
-  },
-  {
-    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-avec-comptage-de-ménage-par-agent",
-    "href": "tracking-muso.html#nombre-de-bénéficiaires-avec-comptage-de-ménage-par-agent",
-    "title": "PROGRAMME MUSO",
-    "section": "2.4 Nombre de bénéficiaires avec comptage de ménage par agent",
-    "text": "2.4 Nombre de bénéficiaires avec comptage de ménage par agent"
-  },
-  {
-    "objectID": "tracking-muso.html#liste-des-bénéficiaires-sans-comptage",
-    "href": "tracking-muso.html#liste-des-bénéficiaires-sans-comptage",
-    "title": "PROGRAMME MUSO",
-    "section": "2.5 Liste des bénéficiaires sans comptage",
-    "text": "2.5 Liste des bénéficiaires sans comptage"
-  },
-  {
-    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-indirects-par-agent",
-    "href": "tracking-muso.html#nombre-de-bénéficiaires-indirects-par-agent",
-    "title": "PROGRAMME MUSO",
-    "section": "2.6 Nombre de bénéficiaires indirects par agent",
-    "text": "2.6 Nombre de bénéficiaires indirects par agent"
-  },
-  {
-    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-avec-ppi-par-agent",
-    "href": "tracking-muso.html#nombre-de-bénéficiaires-avec-ppi-par-agent",
-    "title": "PROGRAMME MUSO",
-    "section": "2.7 Nombre de bénéficiaires avec ppi par agent",
-    "text": "2.7 Nombre de bénéficiaires avec ppi par agent"
-  },
-  {
-    "objectID": "tracking-muso.html#liste-des-bénéficiaires-sans-ppi",
-    "href": "tracking-muso.html#liste-des-bénéficiaires-sans-ppi",
-    "title": "PROGRAMME MUSO",
-    "section": "2.8 Liste des bénéficiaires sans ppi",
-    "text": "2.8 Liste des bénéficiaires sans ppi"
-  },
-  {
-    "objectID": "tracking-gardening.html#nombre-de-bénéficiaires-indirects",
-    "href": "tracking-gardening.html#nombre-de-bénéficiaires-indirects",
-    "title": "PROGRAMME JARDINAGE",
-    "section": "8.1 Nombre de bénéficiaires indirects",
-    "text": "8.1 Nombre de bénéficiaires indirects"
-  },
-  {
-    "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-de-menage",
-    "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-de-menage",
-    "title": "PROGRAMME JARDINAGE",
-    "section": "9.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE",
-    "text": "9.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE"
-  },
-  {
-    "objectID": "tracking-gardening.html#beneficiaires-jardinage-sans-comptage-de-menage",
-    "href": "tracking-gardening.html#beneficiaires-jardinage-sans-comptage-de-menage",
-    "title": "PROGRAMME JARDINAGE",
-    "section": "9.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE",
-    "text": "9.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE"
-  },
-  {
-    "objectID": "tracking-gardening.html#liste-des-beneficiaires-sans-comptage-de-menage",
-    "href": "tracking-gardening.html#liste-des-beneficiaires-sans-comptage-de-menage",
-    "title": "PROGRAMME JARDINAGE",
-    "section": "9.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE",
-    "text": "9.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE"
-  },
-  {
-    "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-actualisé",
-    "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-actualisé",
-    "title": "PROGRAMME JARDINAGE",
-    "section": "9.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ",
-    "text": "9.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ"
-  },
-  {
-    "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-non-actualisé",
-    "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-non-actualisé",
-    "title": "PROGRAMME JARDINAGE",
-    "section": "9.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ",
-    "text": "9.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ"
-  },
-  {
-    "objectID": "tracking-gardening.html#liste-des-beneficiaires-avec-comptage-non-actualisé",
-    "href": "tracking-gardening.html#liste-des-beneficiaires-avec-comptage-non-actualisé",
-    "title": "PROGRAMME JARDINAGE",
-    "section": "9.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ",
-    "text": "9.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ"
   },
   {
     "objectID": "tracking-nutrition.html#nombre-de-beneficiaires-eligibles-par-type-de-malnutrtion",
@@ -579,5 +369,313 @@
     "title": "PROGRAMME NUTRITION",
     "section": "4.7 LISTE DES MENAGES SANS DEPISTAGE",
     "text": "4.7 LISTE DES MENAGES SANS DEPISTAGE"
+  },
+  {
+    "objectID": "tracking-gardening.html#nombre-de-bénéficiaires-indirects",
+    "href": "tracking-gardening.html#nombre-de-bénéficiaires-indirects",
+    "title": "PROGRAMME JARDINAGE",
+    "section": "8.1 Nombre de bénéficiaires indirects",
+    "text": "8.1 Nombre de bénéficiaires indirects"
+  },
+  {
+    "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-de-menage",
+    "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-de-menage",
+    "title": "PROGRAMME JARDINAGE",
+    "section": "9.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE",
+    "text": "9.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE"
+  },
+  {
+    "objectID": "tracking-gardening.html#beneficiaires-jardinage-sans-comptage-de-menage",
+    "href": "tracking-gardening.html#beneficiaires-jardinage-sans-comptage-de-menage",
+    "title": "PROGRAMME JARDINAGE",
+    "section": "9.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE",
+    "text": "9.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE"
+  },
+  {
+    "objectID": "tracking-gardening.html#liste-des-beneficiaires-sans-comptage-de-menage",
+    "href": "tracking-gardening.html#liste-des-beneficiaires-sans-comptage-de-menage",
+    "title": "PROGRAMME JARDINAGE",
+    "section": "9.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE",
+    "text": "9.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE"
+  },
+  {
+    "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-actualisé",
+    "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-actualisé",
+    "title": "PROGRAMME JARDINAGE",
+    "section": "9.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ",
+    "text": "9.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ"
+  },
+  {
+    "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-non-actualisé",
+    "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-non-actualisé",
+    "title": "PROGRAMME JARDINAGE",
+    "section": "9.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ",
+    "text": "9.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ"
+  },
+  {
+    "objectID": "tracking-gardening.html#liste-des-beneficiaires-avec-comptage-non-actualisé",
+    "href": "tracking-gardening.html#liste-des-beneficiaires-avec-comptage-non-actualisé",
+    "title": "PROGRAMME JARDINAGE",
+    "section": "9.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ",
+    "text": "9.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ"
+  },
+  {
+    "objectID": "tracking-call.html",
+    "href": "tracking-call.html",
+    "title": "APPELS ET VISITES",
+    "section": "",
+    "text": "Tip\n\n\n\nAstuce : Pour changer la période ou le dossier sans modifier ce fichier :\nquarto render -P start_date=2025-08-25 -P end_date=2025-08-31 -P data_dir=\"data\""
+  },
+  {
+    "objectID": "tracking-call.html#évolution-temporelle-des-appels-et-visites",
+    "href": "tracking-call.html#évolution-temporelle-des-appels-et-visites",
+    "title": "APPELS ET VISITES",
+    "section": "1.1 Évolution Temporelle des Appels et Visites",
+    "text": "1.1 Évolution Temporelle des Appels et Visites\n\n\n\n\n\n\n\n\n\n\n📊 Résumé jour:\n   • Total: 275 cas\n   • Moyenne par jour: 39.3 cas\n   • Nombre de jours: 7\n\n\n\n\n\n\n\n\n\n\n\n\n\n📊 Résumé jour:\n   • Total: 131 cas\n   • Moyenne par jour: 18.7 cas\n   • Nombre de jours: 7\n\n\n\n\n\n\n\n\n\n📊 Résumé jour:\n   • Total: 144 cas\n   • Moyenne par jour: 28.8 cas\n   • Nombre de jours: 5"
+  },
+  {
+    "objectID": "tracking-call.html#répartition-par-programme-et-commune",
+    "href": "tracking-call.html#répartition-par-programme-et-commune",
+    "title": "APPELS ET VISITES",
+    "section": "1.2 Répartition par Programme et Commune",
+    "text": "1.2 Répartition par Programme et Commune"
+  },
+  {
+    "objectID": "tracking-call.html#analyse-des-taux-de-succès",
+    "href": "tracking-call.html#analyse-des-taux-de-succès",
+    "title": "APPELS ET VISITES",
+    "section": "1.3 Analyse des Taux de Succès",
+    "text": "1.3 Analyse des Taux de Succès\n\n\n\n&lt;Figure size 1344x768 with 0 Axes&gt;\n\n\n\n\n\n\n\n\n\n\n\n\n\n&lt;Figure size 1344x768 with 0 Axes&gt;"
+  },
+  {
+    "objectID": "tracking-call.html#performance-des-agents-de-terrain",
+    "href": "tracking-call.html#performance-des-agents-de-terrain",
+    "title": "APPELS ET VISITES",
+    "section": "1.4 Performance des Agents de Terrain",
+    "text": "1.4 Performance des Agents de Terrain"
+  },
+  {
+    "objectID": "tracking-call.html#analyse-comparative-ptme-vs-oev",
+    "href": "tracking-call.html#analyse-comparative-ptme-vs-oev",
+    "title": "APPELS ET VISITES",
+    "section": "1.5 Analyse Comparative PTME vs OEV",
+    "text": "1.5 Analyse Comparative PTME vs OEV\n\n\n\n&lt;Figure size 1152x768 with 0 Axes&gt;"
+  },
+  {
+    "objectID": "tracking-call.html#tableaux-de-synthèse",
+    "href": "tracking-call.html#tableaux-de-synthèse",
+    "title": "APPELS ET VISITES",
+    "section": "1.6 Tableaux de Synthèse",
+    "text": "1.6 Tableaux de Synthèse\n\n\n📊 STATISTIQUES GÉNÉRALES\n==================================================\n• Total actions: 275\n• Actions réussies: 195\n• Taux de succès global: 70.9%\n• Période analysée: 25/08/2025 - 31/08/2025\n• Communes couvertes: 3\n• Agents actifs: 15\n• Programmes: PTME, OEV"
+  },
+  {
+    "objectID": "tracking-muso.html",
+    "href": "tracking-muso.html",
+    "title": "PROGRAMME MUSO",
+    "section": "",
+    "text": "Note: Durant cette semaine, un total de 0 groupe(s) a/ont créé(s)"
+  },
+  {
+    "objectID": "tracking-muso.html#nombre-de-groupes-créés-pour-cette-semaine",
+    "href": "tracking-muso.html#nombre-de-groupes-créés-pour-cette-semaine",
+    "title": "PROGRAMME MUSO",
+    "section": "",
+    "text": "Note: Durant cette semaine, un total de 0 groupe(s) a/ont créé(s)"
+  },
+  {
+    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-par-agent",
+    "href": "tracking-muso.html#nombre-de-bénéficiaires-par-agent",
+    "title": "PROGRAMME MUSO",
+    "section": "2.1 Nombre de bénéficiaires par agent",
+    "text": "2.1 Nombre de bénéficiaires par agent"
+  },
+  {
+    "objectID": "tracking-muso.html#liste-des-bénéficiaires-muso-actifs",
+    "href": "tracking-muso.html#liste-des-bénéficiaires-muso-actifs",
+    "title": "PROGRAMME MUSO",
+    "section": "2.2 Liste des bénéficiaires MUSO actifs",
+    "text": "2.2 Liste des bénéficiaires MUSO actifs"
+  },
+  {
+    "objectID": "tracking-muso.html#nombre-de-pvvih-par-agent",
+    "href": "tracking-muso.html#nombre-de-pvvih-par-agent",
+    "title": "PROGRAMME MUSO",
+    "section": "2.3 Nombre de PVVIH par agent",
+    "text": "2.3 Nombre de PVVIH par agent"
+  },
+  {
+    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-avec-comptage-de-ménage-par-agent",
+    "href": "tracking-muso.html#nombre-de-bénéficiaires-avec-comptage-de-ménage-par-agent",
+    "title": "PROGRAMME MUSO",
+    "section": "2.4 Nombre de bénéficiaires avec comptage de ménage par agent",
+    "text": "2.4 Nombre de bénéficiaires avec comptage de ménage par agent"
+  },
+  {
+    "objectID": "tracking-muso.html#liste-des-bénéficiaires-sans-comptage",
+    "href": "tracking-muso.html#liste-des-bénéficiaires-sans-comptage",
+    "title": "PROGRAMME MUSO",
+    "section": "2.5 Liste des bénéficiaires sans comptage",
+    "text": "2.5 Liste des bénéficiaires sans comptage"
+  },
+  {
+    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-indirects-par-agent",
+    "href": "tracking-muso.html#nombre-de-bénéficiaires-indirects-par-agent",
+    "title": "PROGRAMME MUSO",
+    "section": "2.6 Nombre de bénéficiaires indirects par agent",
+    "text": "2.6 Nombre de bénéficiaires indirects par agent"
+  },
+  {
+    "objectID": "tracking-muso.html#nombre-de-bénéficiaires-avec-ppi-par-agent",
+    "href": "tracking-muso.html#nombre-de-bénéficiaires-avec-ppi-par-agent",
+    "title": "PROGRAMME MUSO",
+    "section": "2.7 Nombre de bénéficiaires avec ppi par agent",
+    "text": "2.7 Nombre de bénéficiaires avec ppi par agent"
+  },
+  {
+    "objectID": "tracking-muso.html#liste-des-bénéficiaires-sans-ppi",
+    "href": "tracking-muso.html#liste-des-bénéficiaires-sans-ppi",
+    "title": "PROGRAMME MUSO",
+    "section": "2.8 Liste des bénéficiaires sans ppi",
+    "text": "2.8 Liste des bénéficiaires sans ppi"
+  },
+  {
+    "objectID": "tracking-oev.html#nombre-doev-en-club-par-office",
+    "href": "tracking-oev.html#nombre-doev-en-club-par-office",
+    "title": "PROGRAMME OEV",
+    "section": "2.1 Nombre d’OEV en club par office",
+    "text": "2.1 Nombre d’OEV en club par office"
+  },
+  {
+    "objectID": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-en-club",
+    "href": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-en-club",
+    "title": "PROGRAMME OEV",
+    "section": "2.2 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans en club",
+    "text": "2.2 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans en club"
+  },
+  {
+    "objectID": "tracking-oev.html#pyramide-des-ages-des-oev",
+    "href": "tracking-oev.html#pyramide-des-ages-des-oev",
+    "title": "PROGRAMME OEV",
+    "section": "2.3 Pyramide des ages des OEV",
+    "text": "2.3 Pyramide des ages des OEV"
+  },
+  {
+    "objectID": "tracking-oev.html#nombre-doev-non-en-club-par-office",
+    "href": "tracking-oev.html#nombre-doev-non-en-club-par-office",
+    "title": "PROGRAMME OEV",
+    "section": "2.4 Nombre d’OEV non en club par office",
+    "text": "2.4 Nombre d’OEV non en club par office"
+  },
+  {
+    "objectID": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-non-en-club",
+    "href": "tracking-oev.html#cascade-de-suppression-de-charge-virale-pédiatrique-chez-les-enfants-de-moins-de-18-ans-non-en-club",
+    "title": "PROGRAMME OEV",
+    "section": "2.5 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans non en club",
+    "text": "2.5 Cascade de Suppression de Charge virale pédiatrique chez les enfants de moins de 18 ans non en club"
+  },
+  {
+    "objectID": "tracking-oev.html#liste-des-oev-non-en-club",
+    "href": "tracking-oev.html#liste-des-oev-non-en-club",
+    "title": "PROGRAMME OEV",
+    "section": "2.6 Liste des OEV non en club",
+    "text": "2.6 Liste des OEV non en club"
+  },
+  {
+    "objectID": "tracking-oev.html#participation-en-club-des-oev-pour-cette-semaine",
+    "href": "tracking-oev.html#participation-en-club-des-oev-pour-cette-semaine",
+    "title": "PROGRAMME OEV",
+    "section": "3.1 Participation en club des oev pour cette semaine",
+    "text": "3.1 Participation en club des oev pour cette semaine"
+  },
+  {
+    "objectID": "tracking-oev.html#nombre-doev-avec-un-comptage-de-menage",
+    "href": "tracking-oev.html#nombre-doev-avec-un-comptage-de-menage",
+    "title": "PROGRAMME OEV",
+    "section": "4.1 Nombre d’OEV avec un comptage de menage",
+    "text": "4.1 Nombre d’OEV avec un comptage de menage"
+  },
+  {
+    "objectID": "tracking-oev.html#liste-des-enfants-sans-comptage-de-menage",
+    "href": "tracking-oev.html#liste-des-enfants-sans-comptage-de-menage",
+    "title": "PROGRAMME OEV",
+    "section": "4.2 Liste des enfants sans comptage de menage",
+    "text": "4.2 Liste des enfants sans comptage de menage"
+  },
+  {
+    "objectID": "tracking-oev.html#représentation-graphique-des-bénéficiaires-indirects-par-bureau",
+    "href": "tracking-oev.html#représentation-graphique-des-bénéficiaires-indirects-par-bureau",
+    "title": "PROGRAMME OEV",
+    "section": "4.3 Représentation graphique des bénéficiaires indirects par bureau",
+    "text": "4.3 Représentation graphique des bénéficiaires indirects par bureau"
+  },
+  {
+    "objectID": "tracking-oev.html#représentation-graphique-des-fréquences-denfants-testés-vih--vih-non-testés",
+    "href": "tracking-oev.html#représentation-graphique-des-fréquences-denfants-testés-vih--vih-non-testés",
+    "title": "PROGRAMME OEV",
+    "section": "5.1 Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…",
+    "text": "5.1 Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…"
+  },
+  {
+    "objectID": "tracking-oev.html#liste-des-enfants-sans-code-st",
+    "href": "tracking-oev.html#liste-des-enfants-sans-code-st",
+    "title": "PROGRAMME OEV",
+    "section": "5.2 Liste des enfants sans code ST",
+    "text": "5.2 Liste des enfants sans code ST"
+  },
+  {
+    "objectID": "tracking-oev.html#liste-des-fratries-sans-test-de-dépistage",
+    "href": "tracking-oev.html#liste-des-fratries-sans-test-de-dépistage",
+    "title": "PROGRAMME OEV",
+    "section": "5.3 Liste des fratries sans test de dépistage",
+    "text": "5.3 Liste des fratries sans test de dépistage"
+  },
+  {
+    "objectID": "tracking-call.html#vue-densemble-des-performances",
+    "href": "tracking-call.html#vue-densemble-des-performances",
+    "title": "APPELS ET VISITES",
+    "section": "1.1 Vue d’Ensemble des Performances",
+    "text": "1.1 Vue d’Ensemble des Performances\n\n\n1.1.1 Total Interventions\n\n228\n\n\nAppels + Visites\n\n\n\n1.1.2 Taux de Succès\n\n71.9%\n\n\n164 trouvé(s) sur 228\n\n\n\n1.1.3 Interventions Réussies\n\n164\n\n\nBénéficiaires contactés\n\n\n\n1.1.4 Interventions Non Réussies\n\n64\n\n\nBénéficiaires non trouvés"
+  },
+  {
+    "objectID": "tracking-call.html#répartition-par-type-dintervention",
+    "href": "tracking-call.html#répartition-par-type-dintervention",
+    "title": "APPELS ET VISITES",
+    "section": "1.2 Répartition par Type d’Intervention",
+    "text": "1.2 Répartition par Type d’Intervention\n\n\n1.2.1 Appels Téléphoniques\n\n111\n\n\n48.7%\n\n\n\n1.2.2 Visites à Domicile\n\n117\n\n\n51.3%"
+  },
+  {
+    "objectID": "tracking-call.html#répartition-par-programme",
+    "href": "tracking-call.html#répartition-par-programme",
+    "title": "APPELS ET VISITES",
+    "section": "1.3 Répartition par Programme",
+    "text": "1.3 Répartition par Programme\n\n\n1.3.1 Programme PTME\n\n80\n\n\nPrévention transmission mère-enfant\n\n\n\n1.3.2 Programme OEV\n\n148\n\n\nOrphelins et enfants vulnérables"
+  },
+  {
+    "objectID": "tracking-call.html#métriques-opérationnelles",
+    "href": "tracking-call.html#métriques-opérationnelles",
+    "title": "APPELS ET VISITES",
+    "section": "1.4 Métriques Opérationnelles",
+    "text": "1.4 Métriques Opérationnelles\n\n\n1.4.1 Communes Couvertes\n\n3\n\n\nZones d’intervention\n\n\n\n1.4.2 Agents Actifs\n\n16\n\n\nÉquipe de terrain\n\n\n\n1.4.3 Moyenne/Jour\n\n32.6\n\n\nInterventions par jour\n\n\n\n1.4.4 Top Agent\n\n31\n\n\n1fleurgile"
+  },
+  {
+    "objectID": "tracking-call.html#période-danalyse",
+    "href": "tracking-call.html#période-danalyse",
+    "title": "APPELS ET VISITES",
+    "section": "1.5 Période d’Analyse",
+    "text": "1.5 Période d’Analyse\n\n\n1.5.1 Période Analysée\n\n7 jours\n\n\n08/09/2025 - 14/09/2025"
+  },
+  {
+    "objectID": "tracking-call.html#tableau-récapitulatif-global",
+    "href": "tracking-call.html#tableau-récapitulatif-global",
+    "title": "APPELS ET VISITES",
+    "section": "2.1 Tableau Récapitulatif Global",
+    "text": "2.1 Tableau Récapitulatif Global\n\n\n\n\n\n\n\nTable 1: Résumé Global des Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n45.000000\n110.000000\n13.000000\n20.000000\n6.000000\n34.000000\n228.000000\n164.000000\n71.93%"
+  },
+  {
+    "objectID": "tracking-call.html#analyses-par-programme",
+    "href": "tracking-call.html#analyses-par-programme",
+    "title": "APPELS ET VISITES",
+    "section": "2.2 Analyses par Programme",
+    "text": "2.2 Analyses par Programme\n\n2.2.1 Programme PTME\n\n\n\n\n\n\n\nTable 2: Programme PTME - Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n14.000000\n43.000000\n12.000000\n9.000000\n1.000000\n1.000000\n80.000000\n53.000000\n66.25%\n\n\n\n\n\n\n\n\n\n\n2.2.2 Programme OEV\n\n\n\n\n\n\n\nTable 3: Programme OEV - Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n31.000000\n67.000000\n1.000000\n11.000000\n5.000000\n33.000000\n148.000000\n111.000000\n75.00%\n\n\n\n\n\n\n\n\n\nRapport généré automatiquement le 15/09/2025 à 01:57"
   }
 ]
