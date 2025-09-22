@@ -74,7 +74,7 @@
     "href": "tracking-ptme.html#représentation-graphique-des-fréquences-denfants-testés-vih--vih-non-testés",
     "title": "PROGRAMME PTME",
     "section": "4.1 Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…",
-    "text": "4.1 Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…"
+    "text": "4.1 Représentation graphique des fréquences d’enfants testés, VIH-, VIH+, non testés…\n\nNote: Nous tenons à souligner que les filles & fils VIH+ avec un code ST sur CommCare sont au nombre de 2."
   },
   {
     "objectID": "tracking-ptme.html#représentation-graphique-des-fréquences-denfants-testés-vih--vih-non-testés-1",
@@ -87,22 +87,22 @@
     "objectID": "tracking-ptme.html#liste-dynamique-des-filles-fils-non-encore-testés",
     "href": "tracking-ptme.html#liste-dynamique-des-filles-fils-non-encore-testés",
     "title": "PROGRAMME PTME",
-    "section": "4.3 Liste dynamique des filles & fils non encore testés",
-    "text": "4.3 Liste dynamique des filles & fils non encore testés"
+    "section": "4.2 Liste dynamique des filles & fils non encore testés",
+    "text": "4.2 Liste dynamique des filles & fils non encore testés"
   },
   {
     "objectID": "tracking-ptme.html#liste-dynamique-des-filles-et-fils-vih-sans-code-st-sur-commcare",
     "href": "tracking-ptme.html#liste-dynamique-des-filles-et-fils-vih-sans-code-st-sur-commcare",
     "title": "PROGRAMME PTME",
-    "section": "4.4 Liste dynamique des filles et fils VIH+ sans code ST sur CommCare",
-    "text": "4.4 Liste dynamique des filles et fils VIH+ sans code ST sur CommCare"
+    "section": "4.3 Liste dynamique des filles et fils VIH+ sans code ST sur CommCare",
+    "text": "4.3 Liste dynamique des filles et fils VIH+ sans code ST sur CommCare"
   },
   {
     "objectID": "tracking-ptme.html#liste-dynamique-des-filles-et-fils-avec-statut-inconnu-sur-commcare",
     "href": "tracking-ptme.html#liste-dynamique-des-filles-et-fils-avec-statut-inconnu-sur-commcare",
     "title": "PROGRAMME PTME",
-    "section": "4.5 Liste dynamique des filles et fils avec statut inconnu sur Commcare",
-    "text": "4.5 Liste dynamique des filles et fils avec statut inconnu sur Commcare"
+    "section": "4.4 Liste dynamique des filles et fils avec statut inconnu sur Commcare",
+    "text": "4.4 Liste dynamique des filles et fils avec statut inconnu sur Commcare"
   },
   {
     "objectID": "tracking-ptme.html#représentation-graphique-des-statistiques-sur-les-femmes-servies-en-q3-q4-fy25",
@@ -249,7 +249,7 @@
     "href": "tracking-ptme.html#nombre-denfants-exposés-ayant-un-test-pcr-par-tranche-dâge-en-mois-pour-q2_fy25-mères-en-club-vs-mères-non-en-club-vs-mères-non-sur-hivhaiti",
     "title": "PROGRAMME PTME",
     "section": "11.4 Nombre d’enfants exposés ayant un test PCR par tranche d’âge en mois pour Q2_FY25: mères en club vs mères non en club vs mères non sur hivhaiti",
-    "text": "11.4 Nombre d’enfants exposés ayant un test PCR par tranche d’âge en mois pour Q2_FY25: mères en club vs mères non en club vs mères non sur hivhaiti\n\n\n\n\n\n\n\n\n\n\n\n\nNote: Du 2025-01-01 au 2025-09-15, 202 enfants ont été testés dont 161 sont âgés entre 0 et 2 mois, 39 entre 3 et 6 mois et 2 entre 7 et 12 mois. Parmi ces enfants, 13 d’entre eux n’ont pas de mère enregistrée sur HIV Haiti, 67 d’entre eux ont leur mère en club et 122 ont leur mère non en club."
+    "text": "11.4 Nombre d’enfants exposés ayant un test PCR par tranche d’âge en mois pour Q2_FY25: mères en club vs mères non en club vs mères non sur hivhaiti\n\n\n\n\n\n\n\n\n\n\n\n\nNote: Du 2025-01-01 au 2025-09-22, 202 enfants ont été testés dont 161 sont âgés entre 0 et 2 mois, 39 entre 3 et 6 mois et 2 entre 7 et 12 mois. Parmi ces enfants, 13 d’entre eux n’ont pas de mère enregistrée sur HIV Haiti, 67 d’entre eux ont leur mère en club et 122 ont leur mère non en club."
   },
   {
     "objectID": "tracking-ptme.html#nombre-denfants-exposés-ayant-un-test-pcr-dans-les-temps-0---2-mois-vs-nombre-denfants-exposés-ayant-un-test-pcr-après-2-mois-3-12-mois-pour-q2_fy23-mères-non-sur-hivhaiti",
@@ -374,50 +374,50 @@
     "objectID": "tracking-gardening.html#nombre-de-bénéficiaires-indirects",
     "href": "tracking-gardening.html#nombre-de-bénéficiaires-indirects",
     "title": "PROGRAMME JARDINAGE",
-    "section": "8.1 Nombre de bénéficiaires indirects",
-    "text": "8.1 Nombre de bénéficiaires indirects"
+    "section": "6.1 Nombre de bénéficiaires indirects",
+    "text": "6.1 Nombre de bénéficiaires indirects"
   },
   {
     "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-de-menage",
     "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-de-menage",
     "title": "PROGRAMME JARDINAGE",
-    "section": "9.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE",
-    "text": "9.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE"
+    "section": "7.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE",
+    "text": "7.1 BENEFICIAIRES JARDINAGE AVEC COMPTAGE DE MENAGE"
   },
   {
     "objectID": "tracking-gardening.html#beneficiaires-jardinage-sans-comptage-de-menage",
     "href": "tracking-gardening.html#beneficiaires-jardinage-sans-comptage-de-menage",
     "title": "PROGRAMME JARDINAGE",
-    "section": "9.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE",
-    "text": "9.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE"
+    "section": "7.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE",
+    "text": "7.2 BENEFICIAIRES JARDINAGE SANS COMPTAGE DE MENAGE"
   },
   {
     "objectID": "tracking-gardening.html#liste-des-beneficiaires-sans-comptage-de-menage",
     "href": "tracking-gardening.html#liste-des-beneficiaires-sans-comptage-de-menage",
     "title": "PROGRAMME JARDINAGE",
-    "section": "9.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE",
-    "text": "9.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE"
+    "section": "7.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE",
+    "text": "7.3 LISTE DES BENEFICIAIRES SANS COMPTAGE DE MENAGE"
   },
   {
     "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-actualisé",
     "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-actualisé",
     "title": "PROGRAMME JARDINAGE",
-    "section": "9.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ",
-    "text": "9.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ"
+    "section": "7.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ",
+    "text": "7.4 BENEFICIAIRES JARDINAGE AVEC COMPTAGE ACTUALISÉ"
   },
   {
     "objectID": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-non-actualisé",
     "href": "tracking-gardening.html#beneficiaires-jardinage-avec-comptage-non-actualisé",
     "title": "PROGRAMME JARDINAGE",
-    "section": "9.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ",
-    "text": "9.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ"
+    "section": "7.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ",
+    "text": "7.5 BENEFICIAIRES JARDINAGE AVEC COMPTAGE NON ACTUALISÉ"
   },
   {
     "objectID": "tracking-gardening.html#liste-des-beneficiaires-avec-comptage-non-actualisé",
     "href": "tracking-gardening.html#liste-des-beneficiaires-avec-comptage-non-actualisé",
     "title": "PROGRAMME JARDINAGE",
-    "section": "9.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ",
-    "text": "9.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ"
+    "section": "7.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ",
+    "text": "7.6 LISTE DES BENEFICIAIRES AVEC COMPTAGE NON ACTUALISÉ"
   },
   {
     "objectID": "tracking-call.html",
@@ -634,28 +634,28 @@
     "href": "tracking-call.html#vue-densemble-des-performances",
     "title": "APPELS ET VISITES",
     "section": "1.1 Vue d’Ensemble des Performances",
-    "text": "1.1 Vue d’Ensemble des Performances\n\n\n1.1.1 Total Interventions\n\n228\n\n\nAppels + Visites\n\n\n\n1.1.2 Taux de Succès\n\n71.9%\n\n\n164 trouvé(s) sur 228\n\n\n\n1.1.3 Interventions Réussies\n\n164\n\n\nBénéficiaires contactés\n\n\n\n1.1.4 Interventions Non Réussies\n\n64\n\n\nBénéficiaires non trouvés"
+    "text": "1.1 Vue d’Ensemble des Performances\n\n\n1.1.1 Total Interventions\n\n305\n\n\nAppels + Visites\n\n\n\n1.1.2 Taux de Succès\n\n72.1%\n\n\n220 trouvé(s) sur 305\n\n\n\n1.1.3 Interventions Réussies\n\n220\n\n\nBénéficiaires contactés\n\n\n\n1.1.4 Interventions Non Réussies\n\n85\n\n\nBénéficiaires non trouvés"
   },
   {
     "objectID": "tracking-call.html#répartition-par-type-dintervention",
     "href": "tracking-call.html#répartition-par-type-dintervention",
     "title": "APPELS ET VISITES",
     "section": "1.2 Répartition par Type d’Intervention",
-    "text": "1.2 Répartition par Type d’Intervention\n\n\n1.2.1 Appels Téléphoniques\n\n111\n\n\n48.7%\n\n\n\n1.2.2 Visites à Domicile\n\n117\n\n\n51.3%"
+    "text": "1.2 Répartition par Type d’Intervention\n\n\n1.2.1 Appels Téléphoniques\n\n176\n\n\n57.7%\n\n\n\n1.2.2 Visites à Domicile\n\n129\n\n\n42.3%"
   },
   {
     "objectID": "tracking-call.html#répartition-par-programme",
     "href": "tracking-call.html#répartition-par-programme",
     "title": "APPELS ET VISITES",
     "section": "1.3 Répartition par Programme",
-    "text": "1.3 Répartition par Programme\n\n\n1.3.1 Programme PTME\n\n80\n\n\nPrévention transmission mère-enfant\n\n\n\n1.3.2 Programme OEV\n\n148\n\n\nOrphelins et enfants vulnérables"
+    "text": "1.3 Répartition par Programme\n\n\n1.3.1 Programme PTME\n\n93\n\n\nPrévention transmission mère-enfant\n\n\n\n1.3.2 Programme OEV\n\n212\n\n\nOrphelins et enfants vulnérables"
   },
   {
     "objectID": "tracking-call.html#métriques-opérationnelles",
     "href": "tracking-call.html#métriques-opérationnelles",
     "title": "APPELS ET VISITES",
     "section": "1.4 Métriques Opérationnelles",
-    "text": "1.4 Métriques Opérationnelles\n\n\n1.4.1 Communes Couvertes\n\n3\n\n\nZones d’intervention\n\n\n\n1.4.2 Agents Actifs\n\n16\n\n\nÉquipe de terrain\n\n\n\n1.4.3 Moyenne/Jour\n\n32.6\n\n\nInterventions par jour\n\n\n\n1.4.4 Top Agent\n\n31\n\n\n1fleurgile"
+    "text": "1.4 Métriques Opérationnelles\n\n\n1.4.1 Communes Couvertes\n\n3\n\n\nZones d’intervention\n\n\n\n1.4.2 Agents Actifs\n\n17\n\n\nÉquipe de terrain\n\n\n\n1.4.3 Moyenne/Jour\n\n43.6\n\n\nInterventions par jour\n\n\n\n1.4.4 Top Agent\n\n38\n\n\n1fleurgile"
   },
   {
     "objectID": "tracking-call.html#période-danalyse",
@@ -669,13 +669,27 @@
     "href": "tracking-call.html#tableau-récapitulatif-global",
     "title": "APPELS ET VISITES",
     "section": "2.1 Tableau Récapitulatif Global",
-    "text": "2.1 Tableau Récapitulatif Global\n\n\n\n\n\n\n\nTable 1: Résumé Global des Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n45.000000\n110.000000\n13.000000\n20.000000\n6.000000\n34.000000\n228.000000\n164.000000\n71.93%"
+    "text": "2.1 Tableau Récapitulatif Global\n\n\n\n\n\n\n\nTable 1: Résumé Global des Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n51.000000\n114.000000\n14.000000\n20.000000\n20.000000\n86.000000\n305.000000\n220.000000\n72.13%"
   },
   {
     "objectID": "tracking-call.html#analyses-par-programme",
     "href": "tracking-call.html#analyses-par-programme",
     "title": "APPELS ET VISITES",
     "section": "2.2 Analyses par Programme",
-    "text": "2.2 Analyses par Programme\n\n2.2.1 Programme PTME\n\n\n\n\n\n\n\nTable 2: Programme PTME - Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n14.000000\n43.000000\n12.000000\n9.000000\n1.000000\n1.000000\n80.000000\n53.000000\n66.25%\n\n\n\n\n\n\n\n\n\n\n2.2.2 Programme OEV\n\n\n\n\n\n\n\nTable 3: Programme OEV - Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n31.000000\n67.000000\n1.000000\n11.000000\n5.000000\n33.000000\n148.000000\n111.000000\n75.00%\n\n\n\n\n\n\n\n\n\nRapport généré automatiquement le 15/09/2025 à 01:57"
+    "text": "2.2 Analyses par Programme\n\n2.2.1 Programme PTME\n\n\n\n\n\n\n\nTable 2: Programme PTME - Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n14.000000\n44.000000\n13.000000\n9.000000\n3.000000\n10.000000\n93.000000\n63.000000\n67.74%\n\n\n\n\n\n\n\n\n\n\n2.2.2 Programme OEV\n\n\n\n\n\n\n\nTable 3: Programme OEV - Appels et Visites\n\n\n\n\n\ncommune\nCap-Haïtien\nGonaïves\nPort-au-Prince\nTotal\nTotal_Trouvé\n% Trouvé\n\n\nTrouvé\nNon\nOui\nNon\nOui\nNon\nOui\n\n\n\n\n\nmois\n \n \n \n \n \n \n \n \n \n\n\n\n\nSeptember\n37.000000\n70.000000\n1.000000\n11.000000\n17.000000\n76.000000\n212.000000\n157.000000\n74.06%\n\n\n\n\n\n\n\n\n\nRapport généré automatiquement le 22/09/2025 à 12:36"
+  },
+  {
+    "objectID": "tracking-ptme.html#représentation-graphique-des-présences-en-club-durant-la-semaine-écoulée-du-2025-09-15-au-2025-09-21",
+    "href": "tracking-ptme.html#représentation-graphique-des-présences-en-club-durant-la-semaine-écoulée-du-2025-09-15-au-2025-09-21",
+    "title": "PROGRAMME PTME",
+    "section": "7.4 Représentation graphique des présences en club durant la semaine écoulée (du 2025-09-15 au 2025-09-21)",
+    "text": "7.4 Représentation graphique des présences en club durant la semaine écoulée (du 2025-09-15 au 2025-09-21)\n\nDurant cette période, sur 18 Femme(s) PTME attendues en club, 6 était(aient) présente(s) contre 12 qui était(aient) absente(s)."
+  },
+  {
+    "objectID": "tracking-ptme.html#représentation-graphique-des-raisons-dabsence-en-club-durant-la-période-écoulée-du-2025-09-15-au-2025-09-21",
+    "href": "tracking-ptme.html#représentation-graphique-des-raisons-dabsence-en-club-durant-la-période-écoulée-du-2025-09-15-au-2025-09-21",
+    "title": "PROGRAMME PTME",
+    "section": "7.5 Représentation graphique des raisons d’absence en club durant la période écoulée (du 2025-09-15 au 2025-09-21)",
+    "text": "7.5 Représentation graphique des raisons d’absence en club durant la période écoulée (du 2025-09-15 au 2025-09-21)"
   }
 ]
