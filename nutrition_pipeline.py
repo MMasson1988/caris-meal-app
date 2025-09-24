@@ -1,5 +1,5 @@
 """
-RAPPORT JARDINAGE - Script Python exécutable avec python {MODULE}.py
+RAPPORT NUTRITION - Script Python exécutable avec python {MODULE}.py
 """
 
 import pandas as pd
@@ -413,6 +413,7 @@ nut_filtered.to_excel("Enroled.xlsx", sheet_name="enroled", index=False)
 depistage = depistage.rename(columns={'form.case.@case_id': 'caseid','form.depistage.date_de_visite':'date_de_visite'})
 nutrition = pd.merge(nut_filtered, depistage[['date_de_visite','caseid','username']])
 nutrition.to_excel("nutrition.xlsx", sheet_name="enroled", index=False)
+
 print("=== Alertes doublons ===")
 import pandas as pd
 from difflib import SequenceMatcher
@@ -436,13 +437,16 @@ def detecter_doublons_avec_groupes(
     df: pd.DataFrame,
     colonnes: List[str],
     threshold: int = 100,
-    return_only_duplicates: bool = True
+    return_only_duplicates: bool = True,
+    keep_most_na: bool = False  # ✅ Nouveau paramètre
 ) -> pd.DataFrame:
     """
     Détecte des doublons (stricts si threshold=100, sinon fuzzy) sur `colonnes`,
     et retourne un DataFrame avec:
       - duplicate_group_id (int >= 1 pour les groupes; 0 si singleton)
       - duplicate_group_size (taille du groupe)
+    
+    Si keep_most_na=True, garde l'enregistrement avec le plus de valeurs N/A par groupe.
     
     Args
     ----
@@ -451,10 +455,11 @@ def detecter_doublons_avec_groupes(
     threshold : 100 => exact (sur texte normalisé) ; <100 => fuzzy
     return_only_duplicates : si True, ne retourne que les lignes appartenant
                              à un groupe de taille >= 2
+    keep_most_na : si True, garde l'enregistrement avec le plus de N/A par groupe
     
     Returns
     -------
-    DataFrame enrichi
+    DataFrame enrichi (ou nettoyé si keep_most_na=True)
     """
     if not colonnes:
         raise ValueError("Aucune colonne fournie.")
@@ -486,6 +491,11 @@ def detecter_doublons_avec_groupes(
         out = df.copy()
         out["duplicate_group_id"] = group_id
         out["duplicate_group_size"] = np.where(group_id > 0, sizes.values, 1)
+        
+        # ✅ Traitement keep_most_na si demandé
+        if keep_most_na:
+            return _process_keep_most_na(out, return_only_duplicates)
+        
         return out[out["duplicate_group_id"] > 0].reset_index(drop=True) if return_only_duplicates else out
 
     # 3) Cas fuzzy : union-find sur paires similaires (>= threshold)
@@ -544,8 +554,152 @@ def detecter_doublons_avec_groupes(
     out["duplicate_group_id"] = group_id_final
     out["duplicate_group_size"] = size_final
 
+    # ✅ Traitement keep_most_na si demandé
+    if keep_most_na:
+        return _process_keep_most_na(out, return_only_duplicates)
+
     return out[out["duplicate_group_id"] > 0].reset_index(drop=True) if return_only_duplicates else out
 
+def _process_keep_most_na(df_with_groups: pd.DataFrame, return_only_duplicates: bool = True) -> pd.DataFrame:
+    """
+    Fonction auxiliaire pour traiter les groupes et garder l'enregistrement avec le plus de N/A.
+    """
+    
+    # 1) Calculer le pourcentage de N/A pour chaque ligne
+    # Exclure les colonnes techniques ajoutées par la détection
+    technical_cols = ['duplicate_group_id', 'duplicate_group_size']
+    data_cols = [col for col in df_with_groups.columns if col not in technical_cols]
+    
+    total_cols = len(data_cols)
+    df_with_groups['na_count'] = df_with_groups[data_cols].isna().sum(axis=1)
+    df_with_groups['na_percentage'] = (df_with_groups['na_count'] / total_cols * 100).round(2)
+    
+    print(f"📊 Pourcentage de N/A calculé sur {total_cols} colonnes")
+    print(f"📈 Statistiques N/A - Min: {df_with_groups['na_percentage'].min()}%, Max: {df_with_groups['na_percentage'].max()}%")
+    
+    # 2) Fonction pour garder l'enregistrement avec le plus de N/A par groupe
+    def keep_most_na_per_group(group):
+        if len(group) == 1:
+            return group  # Pas de doublon, garder tel quel
+        
+        # Trier par pourcentage N/A décroissant, puis par na_count pour tie-breaking
+        group_sorted = group.sort_values(['na_percentage', 'na_count'], ascending=[False, False])
+        most_na = group_sorted.iloc[0:1]  # Garder le premier (plus de N/A)
+        
+        # Afficher uniquement pour les vrais groupes de doublons
+        if 'caseid' in group.columns:
+            print(f"   Groupe {group['duplicate_group_id'].iloc[0]}: {len(group)} doublons → gardé caseid {most_na['caseid'].iloc[0]} ({most_na['na_percentage'].iloc[0]}% N/A)")
+        else:
+            print(f"   Groupe {group['duplicate_group_id'].iloc[0]}: {len(group)} doublons → gardé index {most_na.index[0]} ({most_na['na_percentage'].iloc[0]}% N/A)")
+        
+        return most_na
+    
+    # 3) Traiter les groupes
+    print("🔍 Traitement des groupes de doublons...")
+    
+    # Séparer les non-doublons (duplicate_group_id == 0) et les doublons
+    non_duplicates = df_with_groups[df_with_groups['duplicate_group_id'] == 0].copy()
+    duplicates = df_with_groups[df_with_groups['duplicate_group_id'] > 0].copy()
+    
+    print(f"   📋 {len(non_duplicates)} enregistrements uniques")
+    print(f"   🔍 {len(duplicates)} enregistrements en doublons dans {duplicates['duplicate_group_id'].nunique()} groupes")
+    
+    # Appliquer la fonction de sélection sur chaque groupe de doublons
+    if len(duplicates) > 0:
+        kept_duplicates = duplicates.groupby('duplicate_group_id').apply(keep_most_na_per_group).reset_index(drop=True)
+    else:
+        kept_duplicates = pd.DataFrame()
+    
+    # 4) Combiner les résultats
+    result = pd.concat([non_duplicates, kept_duplicates], ignore_index=True)
+    
+    # 5) Nettoyer les duplicate_group_id pour qu'ils soient uniques
+    # Réinitialiser duplicate_group_id à 0 pour tous (plus de doublons maintenant)
+    result['duplicate_group_id'] = 0
+    result['duplicate_group_size'] = 1
+    
+    # 6) Supprimer les colonnes de travail
+    result = result.drop(['na_count', 'na_percentage'], axis=1)
+    
+    # 7) Vérification finale
+    print(f"✅ Résultat final: {len(result)} enregistrements")
+    print(f"🎯 Tous les duplicate_group_id sont à 0 (uniques): {(result['duplicate_group_id'] == 0).all()}")
+    
+    # Vérifier l'unicité des caseid si la colonne existe
+    if 'caseid' in result.columns:
+        caseid_duplicates = result['caseid'].duplicated().sum()
+        if caseid_duplicates > 0:
+            print(f"⚠️ Attention: {caseid_duplicates} caseid encore en doublon")
+            # Supprimer les doublons restants par caseid (garder le premier)
+            result = result.drop_duplicates(subset=['caseid'], keep='first')
+            print(f"🧹 Après nettoyage final: {len(result)} enregistrements")
+        else:
+            print(f"✅ Tous les caseid sont uniques")
+    
+    return result
+
+# ✅ REMPLACEMENT DE VOTRE CODE EXISTANT (lignes 551-565)
+print("\n=== TRAITEMENT AVANCÉ DES DOUBLONS AVEC FONCTION INTÉGRÉE ===")
+
+# Appliquer la détection avec traitement automatique des N/A
+nutrition_clean = detecter_doublons_avec_groupes(
+    nutrition, 
+    colonnes=["name", "commune", "username"], 
+    threshold=90,
+    return_only_duplicates=False,  # Garder tous les enregistrements
+    keep_most_na=True  # ✅ Activer le traitement N/A intégré
+)
+
+# Sauvegarder le résultat (A corriger en automatique sur muac)
+nutrition_clean['manutrition_type'] = (
+    nutrition_clean['manutrition_type']
+    .replace('---', 'MAM')
+    .fillna('MAM')
+)
+nutrition_clean.to_excel("nutrition_sans_doublon_integrated.xlsx", index=False)
+
+# ✅ Vérification supplémentaire avec isin() pour s'assurer de la suppression
+print("\n🔍 Vérification avec isin()...")
+
+# Obtenir les caseid gardés
+if 'caseid' in nutrition_clean.columns:
+    kept_caseids = nutrition_clean['caseid'].tolist()
+    
+    # Vérifier que tous les caseid du résultat existent bien dans le DataFrame original
+    original_caseids = set(nutrition['caseid'].tolist())
+    kept_caseids_set = set(kept_caseids)
+    removed_caseids = original_caseids - kept_caseids_set
+    
+    print(f"📊 Résumé du nettoyage:")
+    print(f"   - DataFrame original: {len(nutrition)} enregistrements")
+    print(f"   - DataFrame nettoyé: {len(nutrition_clean)} enregistrements")
+    print(f"   - Enregistrements supprimés: {len(removed_caseids)}")
+    print(f"   - Taux de suppression: {len(removed_caseids)/len(nutrition)*100:.1f}%")
+    
+    # Validation finale avec isin()
+    validation_mask = nutrition['caseid'].isin(kept_caseids)
+    validation_df = nutrition[validation_mask]
+    
+    if len(validation_df) == len(nutrition_clean):
+        print("✅ Validation isin() réussie: le résultat est cohérent")
+    else:
+        print(f"⚠️ Incohérence détectée: {len(validation_df)} vs {len(nutrition_clean)}")
+    
+    # Sauvegarder aussi la liste des caseid supprimés pour audit
+    if removed_caseids:
+        removed_df = pd.DataFrame({'removed_caseid': list(removed_caseids)})
+        removed_df.to_excel("caseids_supprimes_integrated.xlsx", index=False)
+
+# ✅ BONUS: Analyse des N/A par colonne
+print("\n📈 Analyse des valeurs manquantes par colonne dans le résultat final:")
+na_analysis = nutrition_clean.isnull().sum().sort_values(ascending=False)
+na_percentage_by_col = (na_analysis / len(nutrition_clean) * 100).round(1)
+
+for col, count in na_analysis.head(10).items():
+    print(f"   {col}: {count} N/A ({na_percentage_by_col[col]}%)")
+
+# Mise à jour de la variable nutrition pour la suite du pipeline
+#nutrition = nutrition_clean.copy()
 #==============================================================
 # 1) Doublons STRICTS (casse/accents/espaces ignorés)
 res_fuzzy = detecter_doublons_avec_groupes(nutrition, colonnes=["name","commune","username","date_of_birth"], threshold=100)
@@ -557,12 +711,18 @@ nut_fuzzy.to_excel("doublon_nut_fuzzy.xlsx")
 
 # Exemple : on suppose que df contient déjà les colonnes citées
 #============================================================================================
+# ✅ CORRECTION DU PIVOT DEPISTAGE AVEC DEPARTEMENT
+print("\n=== CREATION PIVOT DEPISTAGE AVEC DEPARTEMENT ===")
+
 # Pivot table : une ligne par Département-Commune-Âge (en mois), colonnes = catégories (MAS, MAM, Normal…)
 depistage_nut = depistage_nut.rename(columns={'form.case.@case_id': 'caseid','form.depistage.date_de_visite':'date_de_visite'})
+matrix_depistage = depistage_nut[["commune","age_range","manutrition_type","caseid"]].copy()
 depistage_nut['manutrition_type'] = depistage_nut['manutrition_type'].fillna('Normal')
+
+# Catégories ordonnées
 depistage_nut['manutrition_type'] = pd.Categorical(
     depistage_nut['manutrition_type'], 
-    categories=['MAS', 'MAM', 'Normal'], 
+    categories=['MAM','MAS', 'Normal'], 
     ordered=True
 )
 
@@ -572,22 +732,42 @@ depistage_nut['age_range'] = pd.Categorical(
     ordered=True
 )
 
-# Pivot avec ordre respecté
+# Pivot SANS reset_index() d'abord
 pivot_depistage = pd.pivot_table(
     depistage_nut,
-    index=["commune"],
-    columns=["manutrition_type","age_range"],        
+    index=["commune"],  # commune reste l'index
+    columns=["age_range","manutrition_type"],        
     values="caseid",            
     aggfunc="count",             
     fill_value=0               
-).reset_index()
+)
+# ⚠️ Ne pas faire reset_index() tout de suite
 
-pivot_depistage.to_excel("depistage_table.xlsx")
+print(f"📊 Pivot créé avec {len(pivot_depistage)} communes")
+
+# Construire le mapping unique commune -> departement (Series)
+dep_map = (
+    depistage_nut.loc[:, ["commune","departement"]]
+            .dropna(subset=["commune"])
+            .drop_duplicates(subset=["commune"])
+            .set_index("commune")["departement"]
+)
+
+print(f"📋 Mapping département créé pour {len(dep_map)} communes")
+
+# ✅ Ajouter 'departement' au pivot en utilisant l'index 'commune'
+pivot_depistage_with_dep = pivot_depistage.copy()
+pivot_depistage_with_dep.insert(0, "departement", pivot_depistage_with_dep.index.map(dep_map))
+
+# ✅ MAINTENANT faire reset_index et ordonner
+pivot_depistage_with_dep = pivot_depistage_with_dep.reset_index().sort_values(['departement', 'commune'])
+
+pivot_depistage_with_dep.to_excel("depistage_table.xlsx")
+print("💾 Fichier sauvegardé: depistage_table.xlsx")
 #=======================================================================================================================
-import pandas as pd
 
 # 1) Sous-ensemble et catégories (garde ce que tu avais)
-matrix_nutrition = nutrition[["commune","age_range","manutrition_type","caseid"]].copy()
+matrix_nutrition = nutrition_clean[["commune","age_range","manutrition_type","caseid"]].copy()
 matrix_nutrition["manutrition_type"] = pd.Categorical(
     matrix_nutrition["manutrition_type"].str.strip(),
     categories=["MAS","MAM","Normal"], ordered=True
@@ -599,10 +779,10 @@ matrix_nutrition["age_range"] = pd.Categorical(
 )
 
 # 2) Pivot "pur": index = commune ; colonnes = (age_range, manutrition_type)
-pivot = pd.pivot_table(
+pivot_enroled = pd.pivot_table(
     matrix_nutrition,
     index="commune",
-    columns=["age_range","manutrition_type"],
+    columns=["manutrition_type","age_range"],
     values="caseid",
     aggfunc="count",
     fill_value=0
@@ -617,13 +797,13 @@ dep_map = (
 )
 
 # 4) Ajouter 'departement' au pivot par mapping d'index (pas de merge)
-pivot_with_dep = pivot.copy()
-pivot_with_dep.insert(0, "departement", pivot_with_dep.index.map(dep_map))
+pivot_enroled_with_dep = pivot_enroled.copy()
+pivot_enroled_with_dep.insert(0, "departement", pivot_enroled_with_dep.index.map(dep_map))
 # ✅ Reset index et ordonner par département puis commune
-pivot_with_dep = pivot_with_dep.reset_index().sort_values(['departement', 'commune'])
+pivot_enroled_with_dep = pivot_enroled_with_dep.reset_index().sort_values(['departement', 'commune'])
 
 # 5) Export
-pivot_with_dep.to_excel("enrol_table.xlsx")
+pivot_enroled_with_dep.to_excel("enrol_table.xlsx")
 #=======================================================================================================================
 from openpyxl import load_workbook
 from openpyxl.utils.cell import range_boundaries
@@ -760,6 +940,3 @@ if __name__ == "__main__":
 print("\n" + "="*60)
 print("FIN DU SCRIPT AVEC COPIE CORRIGÉE")
 print("="*60)
-
-
-
